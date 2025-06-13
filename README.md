@@ -1,7 +1,11 @@
-# Commodore Keyboard Mappings
-
-## Commodore 64 keyboard mapping, animated display
+# Commodore Keyboard Mappings - Animated Display
 
 The keyboard maps for unshifted, SHIFT, Commodore, and Control are animated on screen drawing the PETSCII character in scan code order
 
-![64keymap.png](media/64keymap.png)
+## Commodore 64
+
+![64keymaps.png](media/64keymaps.png)
+
+## Commodore Vic-20
+
+![20keymaps.png](media/20keymaps.png)
