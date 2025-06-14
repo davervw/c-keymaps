@@ -31,3 +31,6 @@ The keyboard maps for unshifted, SHIFT, Commodore, and Control are animated on s
 
 (US)
 ![128keymaps.png](media/128keymaps.png)
+
+(French)
+![128french.png](media/128french.png)
