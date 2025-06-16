@@ -54,9 +54,6 @@ init:
     ldx #1
     ldy #19
     jsr display_map
-    ; ldx #<state_none
-    ; ldy #>state_none
-    ; jsr display_xystr
     ldx #<xystrings
     ldy #>xystrings
     jsr display_xystrs
@@ -309,7 +306,30 @@ display_codes:
 +   sta $02
     jsr display_hex
     jsr display_decimal
-    rts
+    ldx $ff
+    bne +
+    ldx #<state_none
+    ldy #>state_none
+    bne ++
++   dex
+    bne +
+    ldx #<state_shift
+    ldy #>state_shift
+    bne ++
++   dex
+    bne +
+    ldx #<state_commodore
+    ldy #>state_commodore
+    bne ++
++   dex
+    bne +++
+    ldx #<state_control
+    ldy #>state_control
+++  jsr display_xystr
+    ldx last_logcol
+    ldy last_physline
+    jsr locate_xy
++++ rts
 
 display_hex: ; .A=value, $fd/fe screen dest
     tay
@@ -724,10 +744,10 @@ save_cursor_char: !byte 0
 fg_color: !byte 14
 inv_color: !byte 11
 
-state_none: !text 25,4,"UNSHIFTED",0
-state_shift: !text 27,4,"SHIFT",0
+state_none:      !text 25,4,"  NONE   ",0
+state_shift:     !text 25,4,"  SHIFT  ",0
 state_commodore: !text 25,4,"COMMODORE",0
-state_control: !text 26,4,"CONTROL",0
+state_control:   !text 25,4," CONTROL ",0
 
 xystrings:
     !text 21,1,18,"SCANCODE",146,"          ",0
