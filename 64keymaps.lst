@@ -15,462 +15,755 @@
     13                          ;
     14                          ; TODO: editor functionality
     15                          
-    16                          * = $c000
-    17                          
-    18                          start:
-    19  c000 4c06c0                 jmp init
-    20  c003 4c4cc0                 jmp reserved
-    21                          
-    22                          init:
-    23  c006 2050c0                 jsr copy_map_addrs
-    24  c009 2083c0                 jsr copy_maps
-    25  c00c 20b2c0                 jsr index_chars
-    26  c00f 20dac1                 jsr compute_scan_xys
-    27  c012 a993                   lda #147
-    28  c014 20d2ff                 jsr $ffd2
-    29  c017 a900                   lda #0
-    30  c019 a201                   ldx #1
-    31  c01b a001                   ldy #1
-    32  c01d 20e8c0                 jsr display_map
-    33  c020 a901                   lda #1
-    34  c022 a201                   ldx #1
-    35  c024 a007                   ldy #7
-    36  c026 20e8c0                 jsr display_map
-    37  c029 a902                   lda #2
-    38  c02b a201                   ldx #1
-    39  c02d a00d                   ldy #13
-    40  c02f 20e8c0                 jsr display_map
-    41  c032 a903                   lda #3
-    42  c034 a201                   ldx #1
-    43  c036 a013                   ldy #19
-    44  c038 20e8c0                 jsr display_map
-    45  c03b a2e9                   ldx #<xystrings
-    46  c03d a0c8                   ldy #>xystrings
-    47  c03f 208fc1                 jsr display_xystrs
-    48  c042 a015                   ldy #21
-    49  c044 84d6                   sty $d6
-    50  c046 a90d                   lda #13
-    51  c048 20d2ff                 jsr $ffd2
-    52  c04b 60                     rts
-    53                          
-    54                          reserved:
-    55  c04c 00                     brk
-    56                          
-    57                          getmap:
-    58  c04d 6c8f02                 jmp ($028f)
-    59                          
-    60                          copy_map_addrs:
-    61                              ; first retrieve addresses to four sets
-    62  c050 78                     sei ; don't allow IRQ to process keyboard and interfere with us
-    63                              
-    64  c051 ad8d02                 lda $28d
-    65  c054 48                     pha ; save existing keyboard shift state
-    66                              
-    67  c055 a000                   ldy #0
-    68  c057 84ff                   sty $ff
-    69  c059 8c8d02                 sty $28d ; keyboard shift state (0,1,2,4)
-    70  c05c 204dc0             -   jsr getmap
-    71  c05f a5f5                   lda $f5
-    72  c061 a4ff                   ldy $ff
-    73  c063 99d9c8                 sta rom_maps,y
-    74  c066 a5f6                   lda $f6
-    75  c068 99dac8                 sta rom_maps+1,y
-    76  c06b e6ff                   inc $ff
-    77  c06d e6ff                   inc $ff
-    78  c06f ad8d02                 lda $28d
-    79  c072 18                     clc
-    80  c073 d001                   bne +
-    81  c075 38                     sec
-    82  c076 2e8d02             +   rol $28d
-    83  c079 c904                   cmp #4
-    84  c07b 90df                   bcc -
-    85                          
-    86  c07d 68                     pla
-    87  c07e 8d8d02                 sta $28d ; restore shift map
-    88                          
-    89  c081 58                     cli ; restore keyboard
-    90  c082 60                     rts
-    91                          
-    92                          copy_maps:
-    93  c083 a200                   ldx #0
-    94  c085 a9d9                   lda #<remaps
-    95  c087 85fd                   sta $fd
-    96  c089 a9c2                   lda #>remaps
-    97  c08b 85fe                   sta $fe
-    98  c08d bdd9c8             --  lda rom_maps,x
-    99  c090 85fb                   sta $fb
-   100  c092 bddac8                 lda rom_maps+1,x
-   101  c095 85fc                   sta $fc
-   102                          
-   103  c097 a03f                   ldy #63
-   104  c099 b1fb               -   lda ($fb),y
-   105  c09b 91fd                   sta ($fd),y
-   106  c09d 88                     dey
-   107  c09e 10f9                   bpl -
-   108                          
-   109  c0a0 18                     clc
-   110  c0a1 a5fd                   lda $fd
-   111  c0a3 6940                   adc #64
-   112  c0a5 85fd                   sta $fd
-   113  c0a7 9002                   bcc +
-   114  c0a9 e6fe                   inc $fe
-   115                          +
-   116  c0ab e8                     inx
-   117  c0ac e8                     inx
-   118  c0ad e008                   cpx #8
-   119  c0af 90dc                   bcc --
-   120  c0b1 60                     rts
-   121                          
-   122                          index_chars:
-   123  c0b2 a200                   ldx #0
-   124  c0b4 a9d9                   lda #<remaps
-   125  c0b6 85fb                   sta $fb
-   126  c0b8 a9c2                   lda #>remaps
-   127  c0ba 85fc                   sta $fc
-   128  c0bc a9d9                   lda #<char_to_scan
-   129  c0be 85fd                   sta $fd
-   130  c0c0 a9c3                   lda #>char_to_scan
-   131  c0c2 85fe                   sta $fe
-   132  c0c4 a03f               --  ldy #63
-   133  c0c6 84ff                   sty $ff
-   134  c0c8 b1fb               -   lda ($fb),y
-   135  c0ca a8                     tay
-   136  c0cb a5ff                   lda $ff
-   137  c0cd 91fd                   sta ($fd),y
-   138  c0cf c6ff                   dec $ff
-   139  c0d1 a4ff                   ldy $ff
-   140  c0d3 10f3                   bpl -
-   141  c0d5 18                     clc
-   142  c0d6 a5fb                   lda $fb
-   143  c0d8 6940                   adc #64 ; advance source 64 scancodes
-   144  c0da 85fb                   sta $fb
-   145  c0dc 9002                   bcc +
-   146  c0de e6fc                   inc $fc
-   147  c0e0 e6fe               +   inc $fe ; advance dest 256 characters
-   148  c0e2 e8                     inx
-   149  c0e3 e004                   cpx #4 ; 4 sets?
-   150  c0e5 90dd                   bcc --
-   151  c0e7 60                     rts
-   152                          
-   153                          display_map: ; .a = map (0..3), .x/.y = screen coordinates
-   154  c0e8 8ee8c8                 stx col_x
-   155  c0eb 8ce7c8                 sty row_y
-   156                          
-   157  c0ee aa                     tax
-   158  c0ef a9d9                   lda #<remaps
-   159  c0f1 85fb                   sta $fb
-   160  c0f3 a9c2                   lda #>remaps
-   161  c0f5 85fc                   sta $fc
-   162  c0f7 e000                   cpx #0
-   163  c0f9 f00e                   beq ++
-   164  c0fb 18                 -   clc
-   165  c0fc a5fb                   lda $fb
-   166  c0fe 6940                   adc #64
-   167  c100 85fb                   sta $fb
-   168  c102 9002                   bcc +
-   169  c104 e6fc                   inc $fc
-   170  c106 ca                 +   dex
-   171  c107 d0f2                   bne -
-   172                          ++
-   173  c109 a900                   lda #0
-   174  c10b 85ff                   sta $ff ; scancode
-   175  c10d a8                     tay
-   176  c10e b1fb               -   lda ($fb),y ; remap of requested shift state
-   177  c110 c9ff                   cmp #$ff
-   178  c112 f00f                   beq +
-   179                          
-   180  c114 8502                   sta $02 ; save character    
-   181  c116 b959c2                 lda scancode_x, y
-   182  c119 aa                     tax
-   183  c11a b999c2                 lda scancode_y, y
-   184  c11d a8                     tay
-   185  c11e a502                   lda $02 ; restore character
-   186                          
-   187  c120 202cc1                 jsr display_char_at_xy
-   188  c123 e6ff               +   inc $ff
-   189  c125 a4ff                   ldy $ff
-   190  c127 c040                   cpy #64
-   191  c129 90e3                   bcc -
-   192  c12b 60                     rts
-   193                          
-   194                          display_char_at_xy:
-   195  c12c 48                     pha
-   196  c12d a900                   lda #0
-   197  c12f 85fe                   sta $fe
-   198  c131 c004                   cpy #4 ; spacebar row?
-   199  c133 d002                   bne +
-   200  c135 a908                   lda #8 ; repeat count for spacebar position
-   201  c137 85fe               +   sta $fe
+    16                          chrout = $ffd2
+    17                          getkey = $ffe4
+    18                          
+    19                          jiffyclock = $a2
+    20                          textptr = $d1 ;/d2 - pointer to current logical screen line, leftmost column
+    21                          colorptr = $f3 ;/f4 - matching pointer to color memory
+    22                          physline = $d6
+    23                          logcol = $d3
+    24                          color = 646
+    25                          screenpage = 648
+    26                          
+    27                          * = $c000
+    28                          
+    29                          start:
+    30  c000 4c06c0                 jmp init
+    31  c003 4cdfc0                 jmp reserved
+    32                          
+    33                          init:
+    34  c006 20d6c2                 jsr copy_map_addrs
+    35  c009 2009c3                 jsr copy_maps
+    36  c00c 2038c3                 jsr index_chars
+    37  c00f 2071c4                 jsr compute_scan_xys
+    38  c012 a993                   lda #147
+    39  c014 20d2ff                 jsr chrout
+    40  c017 a900                   lda #0
+    41  c019 a201                   ldx #1
+    42  c01b a001                   ldy #1
+    43  c01d 207fc3                 jsr display_map
+    44  c020 a901                   lda #1
+    45  c022 a201                   ldx #1
+    46  c024 a007                   ldy #7
+    47  c026 207fc3                 jsr display_map
+    48  c029 a902                   lda #2
+    49  c02b a201                   ldx #1
+    50  c02d a00d                   ldy #13
+    51  c02f 207fc3                 jsr display_map
+    52                          
+    53  c032 a903                   lda #3
+    54  c034 a201                   ldx #1
+    55  c036 a013                   ldy #19
+    56  c038 207fc3                 jsr display_map
+    57                              ; ldx #<state_none
+    58                              ; ldy #>state_none
+    59                              ; jsr display_xystr
+    60  c03b a230                   ldx #<xystrings
+    61  c03d a0c5                   ldy #>xystrings
+    62  c03f 2026c4                 jsr display_xystrs
+    63                          
+    64  c042 a000                   ldy #0
+    65  c044 8c00c5                 sty last_physline
+    66  c047 8c01c5                 sty last_logcol
+    67  c04a 84d6                   sty physline
+    68  c04c a90d                   lda #13
+    69  c04e 20d2ff                 jsr chrout
+    70  c051 c8                     iny
+    71  c052 84d3                   sty logcol
+    72                          
+    73  c054 ad8602                 lda color    
+    74  c057 290f                   and #15
+    75  c059 8d04c5                 sta fg_color
+    76  c05c aa                     tax
+    77  c05d bdd6c5                 lda inverse_colors, x
+    78  c060 8d05c5                 sta inv_color
+    79                          
+    80                          ; main loop
+    81  c063 209fc1             --  jsr check_cursor_moved
+    82  c066 20b4c2                 jsr blinkon
+    83  c069 207bc2             -   jsr chkblink
+    84  c06c 20e4ff                 jsr getkey
+    85  c06f f0f8                   beq -
+    86  c071 20a5c2                 jsr blinkoff
+    87  c074 c911                   cmp #$11
+    88  c076 d006                   bne +
+    89  c078 20e0c0                 jsr cursor_down
+    90  c07b 4c63c0                 jmp --
+    91  c07e c991               +   cmp #$91
+    92  c080 d006                   bne +
+    93  c082 200fc1                 jsr cursor_up
+    94  c085 4c63c0                 jmp --
+    95  c088 c91d               +   cmp #$1d
+    96  c08a d006                   bne +
+    97  c08c 203ec1                 jsr cursor_right
+    98  c08f 4c63c0                 jmp --
+    99  c092 c99d               +   cmp #$9d
+   100  c094 d006                   bne +
+   101  c096 204dc1                 jsr cursor_left
+   102  c099 4c63c0                 jmp --
+   103  c09c c913               +   cmp #19
+   104  c09e d006                   bne +
+   105  c0a0 205cc1                 jsr cursor_home
+   106  c0a3 4c63c0                 jmp --
+   107  c0a6 c985               +   cmp #133 ; F1
+   108  c0a8 d006                   bne +
+   109  c0aa 206ac1                 jsr bg_color_inc
+   110  c0ad 4c63c0                 jmp --
+   111  c0b0 c989               +   cmp #137 ; F2
+   112  c0b2 d006                   bne +
+   113  c0b4 2078c1                 jsr bg_color_dec
+   114  c0b7 4c63c0                 jmp --
+   115  c0ba c98a               +   cmp #138 ; F4
+   116  c0bc d006                   bne +
+   117  c0be 2086c1                 jsr border_color_inc
+   118  c0c1 4c63c0                 jmp --
+   119  c0c4 c98c               +   cmp #140 ; F8
+   120  c0c6 d005                   bne +
+   121  c0c8 a993               -   lda #147
+   122  c0ca 4cd2ff                 jmp chrout ; and !!!EXIT!!!
+   123  c0cd c903               +   cmp #3 ; STOP
+   124  c0cf d008                   bne +
+   125  c0d1 a5c5               --- lda 197
+   126  c0d3 c940                   cmp #64
+   127  c0d5 d0fa                   bne --- ; wait until key released
+   128  c0d7 f0ef                   beq -
+   129  c0d9 208ac1             +   jsr check_color
+   130  c0dc 4c63c0                 jmp --
+   131                          
+   132                          reserved:
+   133  c0df 00                     brk
+   134                          
+   135                          cursor_down:
+   136  c0e0 a6d6                   ldx physline
+   137  c0e2 e017                   cpx #23
+   138  c0e4 900e                   bcc +
+   139  c0e6 a4d3                   ldy logcol
+   140  c0e8 a200                   ldx #0
+   141  c0ea 86d6                   stx physline
+   142  c0ec a90d                   lda #13
+   143  c0ee 20d2ff                 jsr chrout
+   144  c0f1 84d3                   sty logcol
+   145  c0f3 60                     rts
+   146  c0f4 20d2ff             +   jsr chrout
+   147  c0f7 a6d6                   ldx physline
+   148  c0f9 e006                   cpx #6
+   149  c0fb d003                   bne +
+   150  c0fd 20d2ff                 jsr chrout
+   151  c100 e00c               +   cpx #12
+   152  c102 d003                   bne +
+   153  c104 20d2ff                 jsr chrout
+   154  c107 e012               +   cpx #18
+   155  c109 d003                   bne +
+   156  c10b 20d2ff                 jsr chrout
+   157  c10e 60                 +   rts
+   158                          
+   159                          cursor_up:
+   160  c10f a6d6                   ldx physline
+   161  c111 e002                   cpx #2
+   162  c113 b00e                   bcs +
+   163  c115 a216                   ldx #22
+   164  c117 86d6                   stx physline
+   165  c119 a4d3                   ldy logcol
+   166  c11b a90d                   lda #13
+   167  c11d 20d2ff                 jsr chrout
+   168  c120 84d3                   sty logcol
+   169  c122 60                     rts
+   170  c123 20d2ff             +   jsr chrout
+   171  c126 a6d6                   ldx physline
+   172  c128 e006                   cpx #6
+   173  c12a d003                   bne +
+   174  c12c 20d2ff                 jsr chrout
+   175  c12f e00c               +   cpx #12
+   176  c131 d003                   bne +
+   177  c133 20d2ff                 jsr chrout
+   178  c136 e012               +   cpx #18
+   179  c138 d003                   bne +
+   180  c13a 20d2ff                 jsr chrout
+   181  c13d 60                 +   rts
+   182                          
+   183                          cursor_right:
+   184  c13e a6d3                   ldx logcol
+   185  c140 e012                   cpx #18
+   186  c142 9005                   bcc +
+   187  c144 a201                   ldx #1
+   188  c146 86d3                   stx logcol
+   189  c148 60                     rts
+   190  c149 20d2ff             +   jsr chrout
+   191  c14c 60                     rts
+   192                          
+   193                          cursor_left:
+   194  c14d a6d3                   ldx logcol
+   195  c14f e002                   cpx #2
+   196  c151 b005                   bcs +
+   197  c153 a212                   ldx #18
+   198  c155 86d3                   stx logcol
+   199  c157 60                     rts
+   200  c158 20d2ff             +   jsr chrout
+   201  c15b 60                     rts
    202                          
-   203  c139 2071c1                 jsr locate_xy
-   204                          
-   205  c13c 68                     pla
-   206  c13d c9a0                   cmp #160 ; shift space
-   207  c13f f002                   beq +
-   208  c141 c920                   cmp #32 ; space
-   209  c143 d006               +   bne +
-   210  c145 a201                   ldx #1
-   211  c147 86c7                   stx $c7
-   212  c149 d01e                   bne ++
-   213  c14b c90d               +   cmp #13 ; return ^M
-   214  c14d d008                   bne +
-   215  c14f a201                   ldx #1
-   216  c151 86c7                   stx $c7
-   217  c153 a94d                   lda #'M'
-   218  c155 d012                   bne ++
-   219  c157 c98d               +   cmp #141 ; shift+return ^M
-   220  c159 d008                   bne +
-   221  c15b a201                   ldx #1
-   222  c15d 86c7                   stx $c7
-   223  c15f a96d                   lda #'m'
-   224  c161 d006                   bne ++
-   225  c163 a201               +   ldx #1
-   226  c165 86d4                   stx $d4 ; quote mode just in case for control characters
-   227  c167 86d8                   stx $d8 ; number of inserts just in case for control characters
-   228                          ++  
-   229  c169 20d2ff             -   jsr $ffd2
-   230  c16c c6fe                   dec $fe
-   231  c16e 10f9                   bpl - ; repeat for spacebar
-   232  c170 60                     rts
-   233                          
-   234                          locate_xy:
-   235  c171 98                     tya
-   236  c172 18                     clc
-   237  c173 6de7c8                 adc row_y
-   238  c176 c900                   cmp #0
-   239  c178 d004                   bne +
-   240  c17a a913                   lda #19 ; home    
-   241  c17c d006                   bne ++
-   242  c17e e901               +   sbc #1
-   243  c180 85d6                   sta $d6 ; physical line
-   244  c182 a90d                   lda #13
-   245  c184 20d2ff             ++  jsr $ffd2 ; effect the change
-   246  c187 18                     clc
-   247  c188 8a                     txa
-   248  c189 6de8c8                 adc col_x
-   249  c18c 85d3                   sta $d3 ; adjust column
-   250  c18e 60                     rts
-   251                          
-   252                          display_xystrs: ; pointer to an xystr, terminated by empty string (0 length)
-   253  c18f 86fb                   stx $fb
-   254  c191 84fc                   sty $fc
-   255  c193 a002               -   ldy #2
-   256  c195 b1fb                   lda ($fb),y
-   257  c197 f00a                   beq +
-   258  c199 a6fb                   ldx $fb
-   259  c19b a4fc                   ldy $fc
-   260  c19d 20a4c1                 jsr display_xystr
-   261  c1a0 4c93c1                 jmp -
-   262  c1a3 60                 +   rts
-   263                          
-   264                          display_xystr: ; string (x/y registers ptr) is prefixed by screen coordinates, terminated by null
-   265  c1a4 86fb                   stx $fb
-   266  c1a6 84fc                   sty $fc
-   267  c1a8 a000                   ldy #0
-   268  c1aa 8ce8c8                 sty col_x
-   269  c1ad 8ce7c8                 sty row_y
-   270  c1b0 b1fb                   lda ($fb),y
-   271  c1b2 aa                     tax
-   272  c1b3 c8                     iny
-   273  c1b4 b1fb                   lda ($fb),y
-   274  c1b6 a8                     tay
-   275  c1b7 2071c1                 jsr locate_xy
-   276  c1ba 18                     clc
-   277  c1bb a5fb                   lda $fb
-   278  c1bd 6902                   adc #2
-   279  c1bf 85fb                   sta $fb
-   280  c1c1 9002                   bcc +
-   281  c1c3 e6fc                   inc $fc
-   282  c1c5 a000               +   ldy #0
-   283  c1c7 b1fb               -   lda ($fb),y
-   284  c1c9 e6fb                   inc $fb
-   285  c1cb d002                   bne +
-   286  c1cd e6fc                   inc $fc
-   287  c1cf c900               +   cmp #0
-   288  c1d1 f006                   beq +
-   289  c1d3 20d2ff                 jsr $ffd2
-   290  c1d6 4cc7c1                 jmp -
-   291  c1d9 60                 +   rts
-   292                          
-   293                          compute_scan_xys:
-   294  c1da a959                   lda #(5*18-1)
-   295  c1dc 85ff                   sta $ff
-   296  c1de a004                   ldy #4
-   297  c1e0 8402                   sty $02
-   298  c1e2 a211               --  ldx #17
-   299  c1e4 a4ff               -   ldy $ff
-   300  c1e6 b9ffc1                 lda scan_layout,y
-   301  c1e9 300a                   bmi +
-   302  c1eb a8                     tay
-   303  c1ec 8a                     txa
-   304  c1ed 9959c2                 sta scancode_x,y
-   305  c1f0 a502                   lda $02
-   306  c1f2 9999c2                 sta scancode_y,y
-   307  c1f5 c6ff               +   dec $ff
-   308  c1f7 ca                     dex
-   309  c1f8 10ea                   bpl -
-   310  c1fa c602                   dec $02
-   311  c1fc 10e4                   bpl --
-   312  c1fe 60                     rts
+   203                          cursor_home:
+   204  c15c a900                   lda #0
+   205  c15e 85d6                   sta physline
+   206  c160 a90d                   lda #13
+   207  c162 20d2ff                 jsr chrout
+   208  c165 a901                   lda #1
+   209  c167 85d3                   sta logcol
+   210  c169 60                     rts
+   211                          
+   212                          bg_color_inc:
+   213  c16a ee21d0             -   inc $d021
+   214  c16d ad21d0                 lda $d021
+   215  c170 290f                   and #15
+   216  c172 cd04c5                 cmp fg_color
+   217  c175 f0f3                   beq -
+   218  c177 60                     rts
+   219                          
+   220                          bg_color_dec:
+   221  c178 ce21d0             -   dec $d021
+   222  c17b ad21d0                 lda $d021
+   223  c17e 290f                   and #15
+   224  c180 cd04c5                 cmp fg_color
+   225  c183 f0f3                   beq -
+   226  c185 60                     rts
+   227                          
+   228                          border_color_inc:
+   229  c186 ee20d0                 inc $d020
+   230  c189 60                     rts
+   231                          
+   232                          check_color:
+   233  c18a a200                   ldx #0
+   234  c18c ddc6c5             -   cmp color_chars, x
+   235  c18f f006                   beq +
+   236  c191 e8                     inx
+   237  c192 e010                   cpx #16
+   238  c194 d0f6                   bne -
+   239  c196 60                     rts
+   240  c197 8e8602             +   stx color
+   241  c19a 68                     pla ; pull return address
+   242  c19b 68                     pla
+   243  c19c 4c00c0                 jmp start ; restart program
+   244                          
+   245                          check_cursor_moved:
+   246  c19f a6d3                   ldx logcol
+   247  c1a1 a4d6                   ldy physline
+   248  c1a3 cc00c5                 cpy last_physline
+   249  c1a6 d005                   bne +
+   250  c1a8 ec01c5                 cpx last_logcol
+   251  c1ab f009                   beq ++
+   252  c1ad 8e01c5             +   stx last_logcol
+   253  c1b0 8c00c5                 sty last_physline
+   254  c1b3 20b7c1                 jsr display_codes
+   255  c1b6 60                 ++  rts
+   256                          
+   257                          display_codes:
+   258  c1b7 a900                   lda #0
+   259  c1b9 85ff                   sta $ff ; map #
+   260  c1bb a9f6                   lda #<remaps
+   261  c1bd 85fb                   sta $fb
+   262  c1bf a9c5                   lda #>remaps
+   263  c1c1 85fc                   sta $fc    
+   264  c1c3 c006               -   cpy #6
+   265  c1c5 9013                   bcc +
+   266  c1c7 e6ff                   inc $ff
+   267  c1c9 98                     tya
+   268  c1ca e906                   sbc #6
+   269  c1cc a8                     tay
+   270  c1cd 18                     clc
+   271  c1ce a5fb                   lda $fb
+   272  c1d0 6941                   adc #65
+   273  c1d2 85fb                   sta $fb
+   274  c1d4 90ed                   bcc -
+   275  c1d6 e6fc                   inc $fc
+   276  c1d8 d0e9                   bne -
+   277  c1da ca                 +   dex ; change col 1 to 0, etc.
+   278  c1db 8a                     txa
+   279  c1dc 88                     dey ; change line 1 to 0, etc.
+   280  c1dd c004                   cpy #4
+   281  c1df d00a                   bne +
+   282  c1e1 c903                   cmp #3 ; spacebar starts at col 3
+   283  c1e3 9006                   bcc +
+   284  c1e5 c90c                   cmp #12 ; spacebar ends at col 11
+   285  c1e7 b002                   bcs +
+   286  c1e9 a903                   lda #3 ; spacebar is always at 3,4 (0 based)
+   287  c1eb 18                 +   clc
+   288  c1ec 79f8c4                 adc mult_x18,y
+   289  c1ef a8                     tay
+   290  c1f0 a946                   lda #70 ; offset of screen to display code at
+   291  c1f2 85fd                   sta $fd
+   292  c1f4 ad8802                 lda screenpage
+   293  c1f7 85fe                   sta $fe
+   294  c1f9 b996c4                 lda scan_layout,y
+   295  c1fc 8502                   sta $02
+   296  c1fe 2022c2                 jsr display_hex
+   297  c201 2042c2                 jsr display_decimal
+   298  c204 a5fd                   lda $fd
+   299  c206 18                     clc
+   300  c207 6928                   adc #40
+   301  c209 85fd                   sta $fd
+   302  c20b 9002                   bcc +
+   303  c20d e6fe                   inc $fe
+   304  c20f a402               +   ldy $02
+   305  c211 a9ff                   lda #$ff
+   306  c213 c040                   cpy #64
+   307  c215 b002                   bcs +
+   308  c217 b1fb                   lda ($fb),y
+   309  c219 8502               +   sta $02
+   310  c21b 2022c2                 jsr display_hex
+   311  c21e 2042c2                 jsr display_decimal
+   312  c221 60                     rts
    313                          
-   314                          ; this is the hardware scan code physical layout as a 5x18 array
-   315                          ; keys are independent of internationalization, localization
-   316                          ; because these are scancodes - the physical key representations
-   317                          ; independent of the PETSCII codes they map to via KERNAL ROM
-   318                          ; or remapping like we will do
-   319                          ;
-   320                          ; each key 0..63 should be shown exactly once, with 255 for whitespace (not a key)
-   321                          ;
-   322                          ; the purpose of this array is to show where physical keys are
-   323                          ; It does not change.  !!! DO NOT CHANGE !!!
-   324                          scan_layout: ; 5 rows, 18 columns = 90 bytes
-   325  c1ff 39383b080b101318...    !byte 57,56,59,8,11,16,19,24,27,32,35,40,43,48,51,0,255,4
-   326  c211 3aff3e090e111619...    !byte 58,255,62,9,14,17,22,25,30,33,38,41,46,49,54,255,255,5
-   327  c223 3fff0a0d12151a1d...    !byte 63,255,10,13,18,21,26,29,34,37,42,45,50,53,255,1,255,6
-   328  c235 3d340c17141f1c27...    !byte 61,52,12,23,20,31,28,39,36,47,44,55,255,15,7,2,255,3
-   329  c247 ffffff3cffffffff...    !byte 255,255,255,60,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   330                          
-   331                          ; coordinates are derived from scan_layout at runtime to avoid redundant maintainance
-   332                          scancode_x:
-   333  c259 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   334  c279 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   335                              
-   336                          scancode_y:
-   337  c299 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   338  c2b9 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   339                          
-   340                          ; with a US ROM, this will display like the following
-   341                          ; _1234567890+-\st E
-   342                          ; d qwertyuiop@*^  F
-   343                          ; c asdfghjkl:;= m G
-   344                          ; bazxcvbnm,./ aq] H
-   345                          
-   346                          remaps: ; 4 keyboard sets of PETSCII characters indexed by scancode
-   347  c2d9 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   348  c2f9 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   349                          
-   350  c319 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   351  c339 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   352                          
-   353  c359 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   354  c379 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   355                          
-   356  c399 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   357  c3b9 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   358                          
-   359                          char_to_scan: ; 4 sets of scancodes indexed by PETSCII characters
-   360  c3d9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   361  c3e9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   362  c3f9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   363  c409 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   364  c419 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   365  c429 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   366  c439 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   367  c449 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   368  c459 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   369  c469 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   370  c479 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   371  c489 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   372  c499 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   373  c4a9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   374  c4b9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   375  c4c9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   376  c4d9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   377  c4e9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   378  c4f9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   379  c509 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   380                          
-   381  c519 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   382  c529 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   383  c539 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   384  c549 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   385  c559 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   386  c569 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   387  c579 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   388  c589 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   389  c599 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   390  c5a9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   391  c5b9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   392  c5c9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   393  c5d9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   394  c5e9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   395  c5f9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   396  c609 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   397  c619 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   398  c629 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   399  c639 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   400  c649 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   314                          display_hex: ; .A=value, $fd/fe screen dest
+   315  c222 a8                     tay
+   316  c223 290f                   and #$f
+   317  c225 aa                     tax
+   318  c226 bde6c5                 lda hexcodes, x
+   319  c229 aa                     tax
+   320  c22a 98                     tya
+   321  c22b 4a                     lsr
+   322  c22c 4a                     lsr
+   323  c22d 4a                     lsr
+   324  c22e 4a                     lsr
+   325  c22f a8                     tay
+   326  c230 b9e6c5                 lda hexcodes, y
+   327  c233 a001                   ldy #1
+   328  c235 91fd                   sta ($fd),y
+   329  c237 c8                     iny
+   330  c238 8a                     txa
+   331  c239 91fd                   sta ($fd),y
+   332  c23b a000                   ldy #0
+   333  c23d a924                   lda #'$'
+   334  c23f 91fd                   sta ($fd),y
+   335  c241 60                     rts
+   336                          
+   337                          display_decimal: ; .A=value (and $02), $fd/fe screen dest (note: display to side of hex)
+   338  c242 a004                   ldy #4
+   339  c244 a92b                   lda #'+'
+   340  c246 91fd                   sta ($fd),y
+   341  c248 a502                   lda $02
+   342  c24a 8503                   sta $03
+   343  c24c a200                   ldx #0
+   344  c24e 38                     sec
+   345  c24f e964               -   sbc #100
+   346  c251 9005                   bcc +
+   347  c253 8503                   sta $03
+   348  c255 e8                     inx
+   349  c256 d0f7                   bne -
+   350  c258 bde6c5             +   lda hexcodes,x
+   351  c25b c8                     iny
+   352  c25c 91fd                   sta ($fd),y
+   353  c25e a503                   lda $03
+   354  c260 a200                   ldx #0
+   355  c262 38                     sec
+   356  c263 e90a               -   sbc #10
+   357  c265 9005                   bcc +
+   358  c267 8503                   sta $03
+   359  c269 e8                     inx
+   360  c26a d0f7                   bne -
+   361  c26c bde6c5             +   lda hexcodes,x
+   362  c26f c8                     iny
+   363  c270 91fd                   sta ($fd),y
+   364  c272 a603                   ldx $03
+   365  c274 bde6c5                 lda hexcodes,x
+   366  c277 c8                     iny
+   367  c278 91fd                   sta ($fd),y
+   368  c27a 60                     rts
+   369                          
+   370                          chkblink:
+   371  c27b 38                     sec
+   372  c27c ad02c5                 lda jiffyblink
+   373  c27f c5a2                   cmp jiffyclock
+   374  c281 d021                   bne ++
+   375  c283 a5a2                   lda jiffyclock
+   376  c285 6914                   adc #20
+   377  c287 8d02c5                 sta jiffyblink
+   378  c28a ae05c5                 ldx inv_color
+   379  c28d a4d3                   ldy logcol
+   380  c28f b1f3                   lda (colorptr),y
+   381  c291 290f                   and #15
+   382  c293 cd04c5                 cmp fg_color
+   383  c296 f003                   beq +
+   384  c298 ae04c5                 ldx fg_color
+   385  c29b 8a                 +   txa
+   386  c29c 91f3                   sta (colorptr),y
+   387  c29e b1d1               +   lda (textptr),y
+   388  c2a0 4980                   eor #$80
+   389  c2a2 91d1                   sta (textptr),y
+   390  c2a4 60                 ++  rts
+   391                          
+   392                          blinkoff:
+   393  c2a5 aa                     tax
+   394  c2a6 a4d3                   ldy logcol
+   395  c2a8 ad04c5                 lda fg_color
+   396  c2ab 91f3                   sta (colorptr),y
+   397  c2ad ad03c5                 lda save_cursor_char
+   398  c2b0 91d1                   sta (textptr),y
+   399  c2b2 8a                     txa
+   400  c2b3 60                     rts
    401                          
-   402  c659 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   403  c669 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   404  c679 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   405  c689 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   406  c699 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   407  c6a9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   408  c6b9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   409  c6c9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   410  c6d9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   411  c6e9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   412  c6f9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   413  c709 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   414  c719 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   415  c729 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   416  c739 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   417  c749 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   418  c759 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   419  c769 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   420  c779 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   421  c789 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   422                          
-   423  c799 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   424  c7a9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   425  c7b9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   426  c7c9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   427  c7d9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   428  c7e9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   429  c7f9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   430  c809 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   431  c819 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   432  c829 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   433  c839 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   434  c849 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   435  c859 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   436  c869 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   437  c879 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   438  c889 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   439  c899 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   440  c8a9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   441  c8b9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   442  c8c9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   443                          
-   444                          rom_maps: ; addresses of maps in ROM
-   445  c8d9 0000                   !word 0 ; unshifted
-   446  c8db 0000                   !word 0 ; shifted
-   447  c8dd 0000                   !word 0 ; commodore
-   448  c8df 0000                   !word 0 ; control
-   449                          
-   450                          mult_x18:
-   451  c8e1 00122436485a           !byte 0, 18, 36, 54, 72, 90
-   452                          
-   453  c8e7 00                 row_y: !byte 0
-   454  c8e8 00                 col_x: !byte 0
-   455                          
-   456                          xystrings:
-   457                              ; !text 21,1,18,"SCANCODE",146,"   $",0
-   458                              ; !text 22,2,18,"PETSCII",146,"    $",0
-   459                              ; !text 26,4,"UNSHIFTED",0
-   460                              ; !text 21,5,"UPPERCASE/GRAPHICS",0
-   461                              ; !text 26,6,18,"C64.KEY",0
-   462                              ; !text 26,11,"[FIND] F1/F2",0
-   463                              ; !text 26,12,"[FG+-]",0
-   464                              ; !text 26,13,"[BG+-]",0
-   465                              ; !text 26,14,"[BORD]",0
-   466                              ; !text 26,15,"[TEST]",0
-   467                              ; !text 26,16,"[LOAD]",0
-   468                              ; !text 26,17,"[SAVE]",0
-   469                              ; !text 26,18,"[EXIT]",0
-   470                              ; !text 23,22,18,"KEYMAP EDITOR",0
-   471  c8e9 181612433634204b...    !text 24,22,18,"C64 KEYMAPS",0
-   472  c8f8 1617284329323032...    !text 22,23,"(C)2025 DAVERVW",0
-   473  c90a 1518474954485542...    !text 21,24,"GITHUB.COM/DAVERVW",0
-   474  c91f 000000                 !text 0,0,0
+   402                          blinkon:
+   403  c2b4 ae05c5                 ldx inv_color ; assume inverse color
+   404  c2b7 a4d3                   ldy logcol
+   405  c2b9 b1d1                   lda (textptr),y
+   406  c2bb 8d03c5                 sta save_cursor_char
+   407  c2be 0980                   ora #$80 ; my cursor starts with reverse character, blinking can toggle
+   408  c2c0 91d1                   sta (textptr),y
+   409  c2c2 3003                   bmi + ; yes inverse color
+   410  c2c4 ae04c5                 ldx fg_color ; no regular color
+   411  c2c7 8a                 +   txa
+   412  c2c8 91f3                   sta (colorptr),y
+   413  c2ca 18                     clc
+   414  c2cb a5a2                   lda jiffyclock
+   415  c2cd 6914                   adc #20
+   416  c2cf 8d02c5                 sta jiffyblink
+   417  c2d2 60                     rts
+   418                          
+   419                          getmap:
+   420  c2d3 6c8f02                 jmp ($028f)
+   421                          
+   422                          copy_map_addrs:
+   423                              ; first retrieve addresses to four sets
+   424  c2d6 78                     sei ; don't allow IRQ to process keyboard and interfere with us
+   425                          
+   426  c2d7 ad8d02                 lda $28d
+   427  c2da 48                     pha ; save existing keyboard shift state
+   428                          
+   429  c2db a000                   ldy #0
+   430  c2dd 84ff                   sty $ff
+   431  c2df 8c8d02                 sty $28d ; keyboard shift state (0,1,2,4)
+   432  c2e2 20d3c2             -   jsr getmap
+   433  c2e5 a5f5                   lda $f5
+   434  c2e7 a4ff                   ldy $ff
+   435  c2e9 99f0c4                 sta rom_maps,y
+   436  c2ec a5f6                   lda $f6
+   437  c2ee 99f1c4                 sta rom_maps+1,y
+   438  c2f1 e6ff                   inc $ff
+   439  c2f3 e6ff                   inc $ff
+   440  c2f5 ad8d02                 lda $28d
+   441  c2f8 18                     clc
+   442  c2f9 d001                   bne +
+   443  c2fb 38                     sec
+   444  c2fc 2e8d02             +   rol $28d
+   445  c2ff c904                   cmp #4
+   446  c301 90df                   bcc -
+   447                          
+   448  c303 68                     pla
+   449  c304 8d8d02                 sta $28d ; restore shift map
+   450                          
+   451  c307 58                     cli ; restore keyboard
+   452  c308 60                     rts
+   453                          
+   454                          copy_maps:
+   455  c309 a200                   ldx #0
+   456  c30b a9f6                   lda #<remaps
+   457  c30d 85fd                   sta $fd
+   458  c30f a9c5                   lda #>remaps
+   459  c311 85fe                   sta $fe
+   460  c313 bdf0c4             --  lda rom_maps,x
+   461  c316 85fb                   sta $fb
+   462  c318 bdf1c4                 lda rom_maps+1,x
+   463  c31b 85fc                   sta $fc
+   464                          
+   465  c31d a040                   ldy #64
+   466  c31f b1fb               -   lda ($fb),y
+   467  c321 91fd                   sta ($fd),y
+   468  c323 88                     dey
+   469  c324 10f9                   bpl -
+   470                          
+   471  c326 18                     clc
+   472  c327 a5fd                   lda $fd
+   473  c329 6941                   adc #65
+   474  c32b 85fd                   sta $fd
+   475  c32d 9002                   bcc +
+   476  c32f e6fe                   inc $fe
+   477                          +
+   478  c331 e8                     inx
+   479  c332 e8                     inx
+   480  c333 e008                   cpx #8
+   481  c335 90dc                   bcc --
+   482  c337 60                     rts
+   483                          
+   484                          index_chars:
+   485  c338 a200                   ldx #0
+   486  c33a a9ff                   lda #$ff
+   487  c33c 9d7ac7             -   sta char_to_scan,x
+   488  c33f 9d7ac8                 sta char_to_scan+$100,x
+   489  c342 9d7ac9                 sta char_to_scan+$200,x
+   490  c345 9d7aca                 sta char_to_scan+$300,x
+   491  c348 e8                     inx
+   492  c349 d0f1                   bne -
+   493  c34b a9f6                   lda #<remaps
+   494  c34d 85fb                   sta $fb
+   495  c34f a9c5                   lda #>remaps
+   496  c351 85fc                   sta $fc
+   497  c353 a97a                   lda #<char_to_scan
+   498  c355 85fd                   sta $fd
+   499  c357 a9c7                   lda #>char_to_scan
+   500  c359 85fe                   sta $fe
+   501  c35b a03f               --  ldy #63
+   502  c35d 84ff                   sty $ff
+   503  c35f b1fb               -   lda ($fb),y
+   504  c361 a8                     tay
+   505  c362 a5ff                   lda $ff
+   506  c364 91fd                   sta ($fd),y
+   507  c366 c6ff                   dec $ff
+   508  c368 a4ff                   ldy $ff
+   509  c36a 10f3                   bpl -
+   510  c36c 18                     clc
+   511  c36d a5fb                   lda $fb
+   512  c36f 6941                   adc #65 ; advance source 65 scancodes
+   513  c371 85fb                   sta $fb
+   514  c373 9002                   bcc +
+   515  c375 e6fc                   inc $fc
+   516  c377 e6fe               +   inc $fe ; advance dest 256 characters
+   517  c379 e8                     inx
+   518  c37a e004                   cpx #4 ; 4 sets?
+   519  c37c 90dd                   bcc --
+   520  c37e 60                     rts
+   521                          
+   522                          display_map: ; .a = map (0..3), .x/.y = screen coordinates
+   523  c37f 8effc4                 stx col_x
+   524  c382 8cfec4                 sty row_y
+   525                          
+   526  c385 aa                     tax
+   527  c386 a9f6                   lda #<remaps
+   528  c388 85fb                   sta $fb
+   529  c38a a9c5                   lda #>remaps
+   530  c38c 85fc                   sta $fc
+   531  c38e e000                   cpx #0
+   532  c390 f00e                   beq ++
+   533  c392 18                 -   clc
+   534  c393 a5fb                   lda $fb
+   535  c395 6941                   adc #65
+   536  c397 85fb                   sta $fb
+   537  c399 9002                   bcc +
+   538  c39b e6fc                   inc $fc
+   539  c39d ca                 +   dex
+   540  c39e d0f2                   bne -
+   541                          ++
+   542  c3a0 a900                   lda #0
+   543  c3a2 85ff                   sta $ff ; scancode
+   544  c3a4 a8                     tay
+   545  c3a5 b1fb               -   lda ($fb),y ; remap of requested shift state
+   546  c3a7 c9ff                   cmp #$ff
+   547  c3a9 f00f                   beq +
+   548                          
+   549  c3ab 8502                   sta $02 ; save character
+   550  c3ad b9fac6                 lda scancode_x, y
+   551  c3b0 aa                     tax
+   552  c3b1 b93ac7                 lda scancode_y, y
+   553  c3b4 a8                     tay
+   554  c3b5 a502                   lda $02 ; restore character
+   555                          
+   556  c3b7 20c3c3                 jsr display_char_at_xy
+   557  c3ba e6ff               +   inc $ff
+   558  c3bc a4ff                   ldy $ff
+   559  c3be c040                   cpy #64
+   560  c3c0 90e3                   bcc -
+   561  c3c2 60                     rts
+   562                          
+   563                          display_char_at_xy:
+   564  c3c3 48                     pha
+   565  c3c4 a900                   lda #0
+   566  c3c6 85fe                   sta $fe
+   567  c3c8 c004                   cpy #4 ; spacebar row?
+   568  c3ca d002                   bne +
+   569  c3cc a908                   lda #8 ; repeat count for spacebar position
+   570  c3ce 85fe               +   sta $fe
+   571                          
+   572  c3d0 2008c4                 jsr locate_xy
+   573                          
+   574  c3d3 68                     pla
+   575  c3d4 c9a0                   cmp #160 ; shift space
+   576  c3d6 f002                   beq +
+   577  c3d8 c920                   cmp #32 ; space
+   578  c3da d006               +   bne +
+   579  c3dc a201                   ldx #1
+   580  c3de 86c7                   stx $c7
+   581  c3e0 d01e                   bne ++
+   582  c3e2 c90d               +   cmp #13 ; return ^M
+   583  c3e4 d008                   bne +
+   584  c3e6 a201                   ldx #1
+   585  c3e8 86c7                   stx $c7
+   586  c3ea a94d                   lda #'M'
+   587  c3ec d012                   bne ++
+   588  c3ee c98d               +   cmp #141 ; shift+return ^M
+   589  c3f0 d008                   bne +
+   590  c3f2 a201                   ldx #1
+   591  c3f4 86c7                   stx $c7
+   592  c3f6 a96d                   lda #'m'
+   593  c3f8 d006                   bne ++
+   594  c3fa a201               +   ldx #1
+   595  c3fc 86d4                   stx $d4 ; quote mode just in case for control characters
+   596  c3fe 86d8                   stx $d8 ; number of inserts just in case for control characters
+   597                          ++
+   598  c400 20d2ff             -   jsr chrout
+   599  c403 c6fe                   dec $fe
+   600  c405 10f9                   bpl - ; repeat for spacebar
+   601  c407 60                     rts
+   602                          
+   603                          locate_xy:
+   604  c408 98                     tya
+   605  c409 18                     clc
+   606  c40a 6dfec4                 adc row_y
+   607  c40d c900                   cmp #0
+   608  c40f d004                   bne +
+   609  c411 a913                   lda #19 ; home
+   610  c413 d006                   bne ++
+   611  c415 e901               +   sbc #1
+   612  c417 85d6                   sta physline
+   613  c419 a90d                   lda #13
+   614  c41b 20d2ff             ++  jsr chrout ; effect the change
+   615  c41e 18                     clc
+   616  c41f 8a                     txa
+   617  c420 6dffc4                 adc col_x
+   618  c423 85d3                   sta logcol
+   619  c425 60                     rts
+   620                          
+   621                          display_xystrs: ; pointer to an xystr, terminated by empty string (0 length)
+   622  c426 86fb                   stx $fb
+   623  c428 84fc                   sty $fc
+   624  c42a a002               -   ldy #2
+   625  c42c b1fb                   lda ($fb),y
+   626  c42e f00a                   beq +
+   627  c430 a6fb                   ldx $fb
+   628  c432 a4fc                   ldy $fc
+   629  c434 203bc4                 jsr display_xystr
+   630  c437 4c2ac4                 jmp -
+   631  c43a 60                 +   rts
+   632                          
+   633                          display_xystr: ; string (x/y registers ptr) is prefixed by screen coordinates, terminated by null
+   634  c43b 86fb                   stx $fb
+   635  c43d 84fc                   sty $fc
+   636  c43f a000                   ldy #0
+   637  c441 8cffc4                 sty col_x
+   638  c444 8cfec4                 sty row_y
+   639  c447 b1fb                   lda ($fb),y
+   640  c449 aa                     tax
+   641  c44a c8                     iny
+   642  c44b b1fb                   lda ($fb),y
+   643  c44d a8                     tay
+   644  c44e 2008c4                 jsr locate_xy
+   645  c451 18                     clc
+   646  c452 a5fb                   lda $fb
+   647  c454 6902                   adc #2
+   648  c456 85fb                   sta $fb
+   649  c458 9002                   bcc +
+   650  c45a e6fc                   inc $fc
+   651  c45c a000               +   ldy #0
+   652  c45e b1fb               -   lda ($fb),y
+   653  c460 e6fb                   inc $fb
+   654  c462 d002                   bne +
+   655  c464 e6fc                   inc $fc
+   656  c466 c900               +   cmp #0
+   657  c468 f006                   beq +
+   658  c46a 20d2ff                 jsr chrout
+   659  c46d 4c5ec4                 jmp -
+   660  c470 60                 +   rts
+   661                          
+   662                          compute_scan_xys:
+   663  c471 a959                   lda #(5*18-1)
+   664  c473 85ff                   sta $ff
+   665  c475 a004                   ldy #4
+   666  c477 8402                   sty $02
+   667  c479 a211               --  ldx #17
+   668  c47b a4ff               -   ldy $ff
+   669  c47d b996c4                 lda scan_layout,y
+   670  c480 300a                   bmi +
+   671  c482 a8                     tay
+   672  c483 8a                     txa
+   673  c484 99fac6                 sta scancode_x,y
+   674  c487 a502                   lda $02
+   675  c489 993ac7                 sta scancode_y,y
+   676  c48c c6ff               +   dec $ff
+   677  c48e ca                     dex
+   678  c48f 10ea                   bpl -
+   679  c491 c602                   dec $02
+   680  c493 10e4                   bpl --
+   681  c495 60                     rts
+   682                          
+   683                          ; this is the hardware scan code physical layout as a 5x18 array
+   684                          ; keys are independent of internationalization, localization
+   685                          ; because these are scancodes - the physical key representations
+   686                          ; independent of the PETSCII codes they map to via KERNAL ROM
+   687                          ; or remapping like we will do
+   688                          ;
+   689                          ; each key 0..63 should be shown exactly once, with 255 for whitespace (not a key)
+   690                          ;
+   691                          ; the purpose of this array is to show where physical keys are
+   692                          ; It does not change.  !!! DO NOT CHANGE !!!
+   693                          scan_layout: ; 5 rows, 18 columns = 90 bytes
+   694  c496 39383b080b101318...    !byte 57,56,59,8,11,16,19,24,27,32,35,40,43,48,51,0,255,4
+   695  c4a8 3aff3e090e111619...    !byte 58,255,62,9,14,17,22,25,30,33,38,41,46,49,54,255,255,5
+   696  c4ba 3fff0a0d12151a1d...    !byte 63,255,10,13,18,21,26,29,34,37,42,45,50,53,255,1,255,6
+   697  c4cc 3d340c17141f1c27...    !byte 61,52,12,23,20,31,28,39,36,47,44,55,255,15,7,2,255,3
+   698  c4de ffffff3cffffffff...    !byte 255,255,255,60,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   699                          
+   700                          ; with a US ROM, this will display like the following
+   701                          ; _1234567890+-\st E
+   702                          ; d qwertyuiop@*^  F
+   703                          ; c asdfghjkl:;= m G
+   704                          ; bazxcvbnm,./ aq] H
+   705                          
+   706                          rom_maps: ; addresses of maps in ROM
+   707  c4f0 0000                   !word 0 ; unshifted
+   708  c4f2 0000                   !word 0 ; shifted
+   709  c4f4 0000                   !word 0 ; commodore
+   710  c4f6 0000                   !word 0 ; control
+   711                          
+   712                          mult_x18:
+   713  c4f8 00122436485a           !byte 0, 18, 36, 54, 72, 90
+   714                          
+   715                          ; origin point for locate_xy
+   716  c4fe 00                 row_y: !byte 0
+   717  c4ff 00                 col_x: !byte 0
+   718                          
+   719  c500 00                 last_physline: !byte 0
+   720  c501 00                 last_logcol: !byte 0
+   721                          
+   722  c502 00                 jiffyblink: !byte 0
+   723  c503 00                 save_cursor_char: !byte 0
+   724  c504 0e                 fg_color: !byte 14
+   725  c505 0b                 inv_color: !byte 11
+   726                          
+   727  c506 1904554e53484946...state_none: !text 25,4,"UNSHIFTED",0
+   728  c512 1b04534849465400   state_shift: !text 27,4,"SHIFT",0
+   729  c51a 1904434f4d4d4f44...state_commodore: !text 25,4,"COMMODORE",0
+   730  c526 1a04434f4e54524f...state_control: !text 26,4,"CONTROL",0
+   731                          
+   732                          xystrings:
+   733  c530 1501125343414e43...    !text 21,1,18,"SCANCODE",146,"          ",0
+   734  c547 1602125045545343...    !text 22,2,18,"PETSCII",146,"          ",0
+   735                          ;    !text 21,5,"UPPERCASE/GRAPHICS",0
+   736                          ;    !text 26,6,18,"C64.KEY",0
+   737  c55d 1a0b5b42472b205d...    !text 26,11,"[BG+ ] F1",0
+   738  c569 1a0c5b42472d205d...    !text 26,12,"[BG- ] F2",0
+   739                          ;    !text 26,13,"[FIND] F3",0
+   740  c575 1a0e5b4252442b5d...    !text 26,14,"[BRD+] F4",0
+   741                          ;    !text 26,15,"[SAVE] F5",0
+   742                          ;    !text 26,16,"[LOAD] F6",0
+   743                          ;    !text 26,17,"[TEST] F7",0
+   744  c581 1a125b455849545d...    !text 26,18,"[EXIT] F8",0
+   745                              ;!text 23,22,18,"KEYMAP EDITOR",0
+   746  c58d 171612433634204b...    !text 23,22,18,"C64 KEYMAPS",0
+   747  c59c 1617284329323032...    !text 22,23,"(C)2025 DAVERVW",0
+   748  c5ae 1518474954485542...    !text 21,24,"GITHUB.COM/DAVERVW",0
+   749  c5c3 000000                 !text 0,0,0
+   750                          
+   751                          ; control characters that change colors, in order colors 0..15
+   752  c5c6 90051c9f9c1e1f9e...color_chars !byte 144,5,28,159,156,30,31,158,129,149,150,151,152,153,154,155
+   753                          
+   754                          ; complementary colors in relation to colors 0..15
+   755  c5d6 0100050a0d020809...inverse_colors !byte 1,0,5,10,13,2,8,9,6,7,3,14,15,4,11,12
+   756                          
+   757  c5e6 3031323334353637...hexcodes !text "0123456789",1,2,3,4,5,6 ; screen codes
+   758                          
+   759                          remaps = * ; 4 keyboard sets of PETSCII characters indexed by scancode (260 bytes total, 65 bytes each set)
+   760                          
+   761                          ; coordinates are derived from scan_layout at runtime to avoid redundant maintainance
+   762                          scancode_x = remaps + 260 ; 64 bytes total
+   763                          scancode_y = scancode_x + 64 ; 64 bytes total
+   764                          
+   765                          char_to_scan = scancode_y + 64 ; 4 sets of scancodes indexed by PETSCII characters (1024 bytes total)
+   766                          
+   767                          finish = char_to_scan + 1024 ; end
