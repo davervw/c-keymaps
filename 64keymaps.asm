@@ -33,7 +33,6 @@ start:
 init:
     jsr copy_map_addrs
     jsr copy_maps
-    jsr index_chars
     jsr compute_scan_xys
     lda #147
     jsr chrout
@@ -501,44 +500,6 @@ copy_maps:
     bcc --
     rts
 
-index_chars:
-    ldx #0
-    lda #$ff
--   sta char_to_scan,x
-    sta char_to_scan+$100,x
-    sta char_to_scan+$200,x
-    sta char_to_scan+$300,x
-    inx
-    bne -
-    lda #<remaps
-    sta $fb
-    lda #>remaps
-    sta $fc
-    lda #<char_to_scan
-    sta $fd
-    lda #>char_to_scan
-    sta $fe
---  ldy #63
-    sty $ff
--   lda ($fb),y
-    tay
-    lda $ff
-    sta ($fd),y
-    dec $ff
-    ldy $ff
-    bpl -
-    clc
-    lda $fb
-    adc #65 ; advance source 65 scancodes
-    sta $fb
-    bcc +
-    inc $fc
-+   inc $fe ; advance dest 256 characters
-    inx
-    cpx #4 ; 4 sets?
-    bcc --
-    rts
-
 display_map: ; .a = map (0..3), .x/.y = screen coordinates
     stx col_x
     sty row_y
@@ -782,6 +743,4 @@ remaps = * ; 4 keyboard sets of PETSCII characters indexed by scancode (260 byte
 scancode_x = remaps + 260 ; 64 bytes total
 scancode_y = scancode_x + 64 ; 64 bytes total
 
-char_to_scan = scancode_y + 64 ; 4 sets of scancodes indexed by PETSCII characters (1024 bytes total)
-
-finish = char_to_scan + 1024 ; end
+finish = scancode_y + 64 ; end
