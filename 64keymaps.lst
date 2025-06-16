@@ -25,7 +25,7 @@
     23  c006 2050c0                 jsr copy_map_addrs
     24  c009 2083c0                 jsr copy_maps
     25  c00c 20b2c0                 jsr index_chars
-    26  c00f 20cec1                 jsr compute_scan_xys
+    26  c00f 20dac1                 jsr compute_scan_xys
     27  c012 a993                   lda #147
     28  c014 20d2ff                 jsr $ffd2
     29  c017 a900                   lda #0
@@ -44,9 +44,9 @@
     42  c034 a201                   ldx #1
     43  c036 a013                   ldy #19
     44  c038 20e8c0                 jsr display_map
-    45  c03b a2dd                   ldx #<xystrings
+    45  c03b a2e9                   ldx #<xystrings
     46  c03d a0c8                   ldy #>xystrings
-    47  c03f 2083c1                 jsr display_xystrs
+    47  c03f 208fc1                 jsr display_xystrs
     48  c042 a015                   ldy #21
     49  c044 84d6                   sty $d6
     50  c046 a90d                   lda #13
@@ -72,9 +72,9 @@
     70  c05c 204dc0             -   jsr getmap
     71  c05f a5f5                   lda $f5
     72  c061 a4ff                   ldy $ff
-    73  c063 99cdc8                 sta rom_maps,y
+    73  c063 99d9c8                 sta rom_maps,y
     74  c066 a5f6                   lda $f6
-    75  c068 99cec8                 sta rom_maps+1,y
+    75  c068 99dac8                 sta rom_maps+1,y
     76  c06b e6ff                   inc $ff
     77  c06d e6ff                   inc $ff
     78  c06f ad8d02                 lda $28d
@@ -93,13 +93,13 @@
     91                          
     92                          copy_maps:
     93  c083 a200                   ldx #0
-    94  c085 a9cd                   lda #<remaps
+    94  c085 a9d9                   lda #<remaps
     95  c087 85fd                   sta $fd
     96  c089 a9c2                   lda #>remaps
     97  c08b 85fe                   sta $fe
-    98  c08d bdcdc8             --  lda rom_maps,x
+    98  c08d bdd9c8             --  lda rom_maps,x
     99  c090 85fb                   sta $fb
-   100  c092 bdcec8                 lda rom_maps+1,x
+   100  c092 bddac8                 lda rom_maps+1,x
    101  c095 85fc                   sta $fc
    102                          
    103  c097 a03f                   ldy #63
@@ -123,11 +123,11 @@
    121                          
    122                          index_chars:
    123  c0b2 a200                   ldx #0
-   124  c0b4 a9cd                   lda #<remaps
+   124  c0b4 a9d9                   lda #<remaps
    125  c0b6 85fb                   sta $fb
    126  c0b8 a9c2                   lda #>remaps
    127  c0ba 85fc                   sta $fc
-   128  c0bc a9cd                   lda #<char_to_scan
+   128  c0bc a9d9                   lda #<char_to_scan
    129  c0be 85fd                   sta $fd
    130  c0c0 a9c3                   lda #>char_to_scan
    131  c0c2 85fe                   sta $fe
@@ -153,11 +153,11 @@
    151  c0e7 60                     rts
    152                          
    153                          display_map: ; .a = map (0..3), .x/.y = screen coordinates
-   154  c0e8 8edcc8                 stx col_x
-   155  c0eb 8cdbc8                 sty row_y
+   154  c0e8 8ee8c8                 stx col_x
+   155  c0eb 8ce7c8                 sty row_y
    156                          
    157  c0ee aa                     tax
-   158  c0ef a9cd                   lda #<remaps
+   158  c0ef a9d9                   lda #<remaps
    159  c0f1 85fb                   sta $fb
    160  c0f3 a9c2                   lda #>remaps
    161  c0f5 85fc                   sta $fc
@@ -180,9 +180,9 @@
    178  c112 f00f                   beq +
    179                          
    180  c114 8502                   sta $02 ; save character    
-   181  c116 b94dc2                 lda scancode_x, y
+   181  c116 b959c2                 lda scancode_x, y
    182  c119 aa                     tax
-   183  c11a b98dc2                 lda scancode_y, y
+   183  c11a b999c2                 lda scancode_y, y
    184  c11d a8                     tay
    185  c11e a502                   lda $02 ; restore character
    186                          
@@ -202,7 +202,7 @@
    200  c135 a908                   lda #8 ; repeat count for spacebar position
    201  c137 85fe               +   sta $fe
    202                          
-   203  c139 2065c1                 jsr locate_xy
+   203  c139 2071c1                 jsr locate_xy
    204                          
    205  c13c 68                     pla
    206  c13d c9a0                   cmp #160 ; shift space
@@ -210,260 +210,267 @@
    208  c141 c920                   cmp #32 ; space
    209  c143 d006               +   bne +
    210  c145 a201                   ldx #1
-   211  c147 85c7                   sta $c7
-   212  c149 d012                   bne ++
+   211  c147 86c7                   stx $c7
+   212  c149 d01e                   bne ++
    213  c14b c90d               +   cmp #13 ; return ^M
    214  c14d d008                   bne +
    215  c14f a201                   ldx #1
-   216  c151 85c7                   sta $c7
+   216  c151 86c7                   stx $c7
    217  c153 a94d                   lda #'M'
-   218  c155 d006                   bne ++
-   219  c157 a201               +   ldx #1
-   220  c159 86d4                   stx $d4 ; quote mode just in case for control characters
-   221  c15b 86d8                   stx $d8 ; number of inserts just in case for control characters
-   222                          ++  
-   223  c15d 20d2ff             -   jsr $ffd2
-   224  c160 c6fe                   dec $fe
-   225  c162 10f9                   bpl - ; repeat for spacebar
-   226  c164 60                     rts
-   227                          
-   228                          locate_xy:
-   229  c165 98                     tya
-   230  c166 18                     clc
-   231  c167 6ddbc8                 adc row_y
-   232  c16a c900                   cmp #0
-   233  c16c d004                   bne +
-   234  c16e a913                   lda #19 ; home    
-   235  c170 d006                   bne ++
-   236  c172 e901               +   sbc #1
-   237  c174 85d6                   sta $d6 ; physical line
-   238  c176 a90d                   lda #13
-   239  c178 20d2ff             ++  jsr $ffd2 ; effect the change
-   240  c17b 18                     clc
-   241  c17c 8a                     txa
-   242  c17d 6ddcc8                 adc col_x
-   243  c180 85d3                   sta $d3 ; adjust column
-   244  c182 60                     rts
-   245                          
-   246                          display_xystrs: ; pointer to an xystr, terminated by empty string (0 length)
-   247  c183 86fb                   stx $fb
-   248  c185 84fc                   sty $fc
-   249  c187 a002               -   ldy #2
-   250  c189 b1fb                   lda ($fb),y
-   251  c18b f00a                   beq +
-   252  c18d a6fb                   ldx $fb
-   253  c18f a4fc                   ldy $fc
-   254  c191 2098c1                 jsr display_xystr
-   255  c194 4c87c1                 jmp -
-   256  c197 60                 +   rts
-   257                          
-   258                          display_xystr: ; string (x/y registers ptr) is prefixed by screen coordinates, terminated by null
-   259  c198 86fb                   stx $fb
-   260  c19a 84fc                   sty $fc
-   261  c19c a000                   ldy #0
-   262  c19e 8cdcc8                 sty col_x
-   263  c1a1 8cdbc8                 sty row_y
-   264  c1a4 b1fb                   lda ($fb),y
-   265  c1a6 aa                     tax
-   266  c1a7 c8                     iny
-   267  c1a8 b1fb                   lda ($fb),y
-   268  c1aa a8                     tay
-   269  c1ab 2065c1                 jsr locate_xy
-   270  c1ae 18                     clc
-   271  c1af a5fb                   lda $fb
-   272  c1b1 6902                   adc #2
-   273  c1b3 85fb                   sta $fb
-   274  c1b5 9002                   bcc +
-   275  c1b7 e6fc                   inc $fc
-   276  c1b9 a000               +   ldy #0
-   277  c1bb b1fb               -   lda ($fb),y
-   278  c1bd e6fb                   inc $fb
-   279  c1bf d002                   bne +
-   280  c1c1 e6fc                   inc $fc
-   281  c1c3 c900               +   cmp #0
-   282  c1c5 f006                   beq +
-   283  c1c7 20d2ff                 jsr $ffd2
-   284  c1ca 4cbbc1                 jmp -
-   285  c1cd 60                 +   rts
-   286                          
-   287                          compute_scan_xys:
-   288  c1ce a959                   lda #(5*18-1)
-   289  c1d0 85ff                   sta $ff
-   290  c1d2 a004                   ldy #4
-   291  c1d4 8402                   sty $02
-   292  c1d6 a211               --  ldx #17
-   293  c1d8 a4ff               -   ldy $ff
-   294  c1da b9f3c1                 lda scan_layout,y
-   295  c1dd 300a                   bmi +
-   296  c1df a8                     tay
-   297  c1e0 8a                     txa
-   298  c1e1 994dc2                 sta scancode_x,y
-   299  c1e4 a502                   lda $02
-   300  c1e6 998dc2                 sta scancode_y,y
-   301  c1e9 c6ff               +   dec $ff
-   302  c1eb ca                     dex
-   303  c1ec 10ea                   bpl -
-   304  c1ee c602                   dec $02
-   305  c1f0 10e4                   bpl --
-   306  c1f2 60                     rts
-   307                          
-   308                          ; this is the hardware scan code physical layout as a 5x18 array
-   309                          ; keys are independent of internationalization, localization
-   310                          ; because these are scancodes - the physical key representations
-   311                          ; independent of the PETSCII codes they map to via KERNAL ROM
-   312                          ; or remapping like we will do
-   313                          ;
-   314                          ; each key 0..63 should be shown exactly once, with 255 for whitespace (not a key)
-   315                          ;
-   316                          ; the purpose of this array is to show where physical keys are
-   317                          ; It does not change.  !!! DO NOT CHANGE !!!
-   318                          scan_layout: ; 5 rows, 18 columns = 90 bytes
-   319  c1f3 39383b080b101318...    !byte 57,56,59,8,11,16,19,24,27,32,35,40,43,48,51,0,255,4
-   320  c205 3aff3e090e111619...    !byte 58,255,62,9,14,17,22,25,30,33,38,41,46,49,54,255,255,5
-   321  c217 3fff0a0d12151a1d...    !byte 63,255,10,13,18,21,26,29,34,37,42,45,50,53,255,1,255,6
-   322  c229 3d340c17141f1c27...    !byte 61,52,12,23,20,31,28,39,36,47,44,55,255,15,7,2,255,3
-   323  c23b ffffff3cffffffff...    !byte 255,255,255,60,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   324                          
-   325                          ; coordinates are derived from scan_layout at runtime to avoid redundant maintainance
-   326                          scancode_x:
-   327  c24d 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   328  c26d 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   329                              
-   330                          scancode_y:
-   331  c28d 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   332  c2ad 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   333                          
-   334                          ; with a US ROM, this will display like the following
-   335                          ; _1234567890+-\st E
-   336                          ; d qwertyuiop@*^  F
-   337                          ; c asdfghjkl:;= m G
-   338                          ; bazxcvbnm,./ aq] H
+   218  c155 d012                   bne ++
+   219  c157 c98d               +   cmp #141 ; shift+return ^M
+   220  c159 d008                   bne +
+   221  c15b a201                   ldx #1
+   222  c15d 86c7                   stx $c7
+   223  c15f a96d                   lda #'m'
+   224  c161 d006                   bne ++
+   225  c163 a201               +   ldx #1
+   226  c165 86d4                   stx $d4 ; quote mode just in case for control characters
+   227  c167 86d8                   stx $d8 ; number of inserts just in case for control characters
+   228                          ++  
+   229  c169 20d2ff             -   jsr $ffd2
+   230  c16c c6fe                   dec $fe
+   231  c16e 10f9                   bpl - ; repeat for spacebar
+   232  c170 60                     rts
+   233                          
+   234                          locate_xy:
+   235  c171 98                     tya
+   236  c172 18                     clc
+   237  c173 6de7c8                 adc row_y
+   238  c176 c900                   cmp #0
+   239  c178 d004                   bne +
+   240  c17a a913                   lda #19 ; home    
+   241  c17c d006                   bne ++
+   242  c17e e901               +   sbc #1
+   243  c180 85d6                   sta $d6 ; physical line
+   244  c182 a90d                   lda #13
+   245  c184 20d2ff             ++  jsr $ffd2 ; effect the change
+   246  c187 18                     clc
+   247  c188 8a                     txa
+   248  c189 6de8c8                 adc col_x
+   249  c18c 85d3                   sta $d3 ; adjust column
+   250  c18e 60                     rts
+   251                          
+   252                          display_xystrs: ; pointer to an xystr, terminated by empty string (0 length)
+   253  c18f 86fb                   stx $fb
+   254  c191 84fc                   sty $fc
+   255  c193 a002               -   ldy #2
+   256  c195 b1fb                   lda ($fb),y
+   257  c197 f00a                   beq +
+   258  c199 a6fb                   ldx $fb
+   259  c19b a4fc                   ldy $fc
+   260  c19d 20a4c1                 jsr display_xystr
+   261  c1a0 4c93c1                 jmp -
+   262  c1a3 60                 +   rts
+   263                          
+   264                          display_xystr: ; string (x/y registers ptr) is prefixed by screen coordinates, terminated by null
+   265  c1a4 86fb                   stx $fb
+   266  c1a6 84fc                   sty $fc
+   267  c1a8 a000                   ldy #0
+   268  c1aa 8ce8c8                 sty col_x
+   269  c1ad 8ce7c8                 sty row_y
+   270  c1b0 b1fb                   lda ($fb),y
+   271  c1b2 aa                     tax
+   272  c1b3 c8                     iny
+   273  c1b4 b1fb                   lda ($fb),y
+   274  c1b6 a8                     tay
+   275  c1b7 2071c1                 jsr locate_xy
+   276  c1ba 18                     clc
+   277  c1bb a5fb                   lda $fb
+   278  c1bd 6902                   adc #2
+   279  c1bf 85fb                   sta $fb
+   280  c1c1 9002                   bcc +
+   281  c1c3 e6fc                   inc $fc
+   282  c1c5 a000               +   ldy #0
+   283  c1c7 b1fb               -   lda ($fb),y
+   284  c1c9 e6fb                   inc $fb
+   285  c1cb d002                   bne +
+   286  c1cd e6fc                   inc $fc
+   287  c1cf c900               +   cmp #0
+   288  c1d1 f006                   beq +
+   289  c1d3 20d2ff                 jsr $ffd2
+   290  c1d6 4cc7c1                 jmp -
+   291  c1d9 60                 +   rts
+   292                          
+   293                          compute_scan_xys:
+   294  c1da a959                   lda #(5*18-1)
+   295  c1dc 85ff                   sta $ff
+   296  c1de a004                   ldy #4
+   297  c1e0 8402                   sty $02
+   298  c1e2 a211               --  ldx #17
+   299  c1e4 a4ff               -   ldy $ff
+   300  c1e6 b9ffc1                 lda scan_layout,y
+   301  c1e9 300a                   bmi +
+   302  c1eb a8                     tay
+   303  c1ec 8a                     txa
+   304  c1ed 9959c2                 sta scancode_x,y
+   305  c1f0 a502                   lda $02
+   306  c1f2 9999c2                 sta scancode_y,y
+   307  c1f5 c6ff               +   dec $ff
+   308  c1f7 ca                     dex
+   309  c1f8 10ea                   bpl -
+   310  c1fa c602                   dec $02
+   311  c1fc 10e4                   bpl --
+   312  c1fe 60                     rts
+   313                          
+   314                          ; this is the hardware scan code physical layout as a 5x18 array
+   315                          ; keys are independent of internationalization, localization
+   316                          ; because these are scancodes - the physical key representations
+   317                          ; independent of the PETSCII codes they map to via KERNAL ROM
+   318                          ; or remapping like we will do
+   319                          ;
+   320                          ; each key 0..63 should be shown exactly once, with 255 for whitespace (not a key)
+   321                          ;
+   322                          ; the purpose of this array is to show where physical keys are
+   323                          ; It does not change.  !!! DO NOT CHANGE !!!
+   324                          scan_layout: ; 5 rows, 18 columns = 90 bytes
+   325  c1ff 39383b080b101318...    !byte 57,56,59,8,11,16,19,24,27,32,35,40,43,48,51,0,255,4
+   326  c211 3aff3e090e111619...    !byte 58,255,62,9,14,17,22,25,30,33,38,41,46,49,54,255,255,5
+   327  c223 3fff0a0d12151a1d...    !byte 63,255,10,13,18,21,26,29,34,37,42,45,50,53,255,1,255,6
+   328  c235 3d340c17141f1c27...    !byte 61,52,12,23,20,31,28,39,36,47,44,55,255,15,7,2,255,3
+   329  c247 ffffff3cffffffff...    !byte 255,255,255,60,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   330                          
+   331                          ; coordinates are derived from scan_layout at runtime to avoid redundant maintainance
+   332                          scancode_x:
+   333  c259 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   334  c279 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   335                              
+   336                          scancode_y:
+   337  c299 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   338  c2b9 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
    339                          
-   340                          remaps: ; 4 keyboard sets of PETSCII characters indexed by scancode
-   341  c2cd 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   342  c2ed 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   343                          
-   344  c30d 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   345  c32d 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   346                          
-   347  c34d 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   348  c36d 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   340                          ; with a US ROM, this will display like the following
+   341                          ; _1234567890+-\st E
+   342                          ; d qwertyuiop@*^  F
+   343                          ; c asdfghjkl:;= m G
+   344                          ; bazxcvbnm,./ aq] H
+   345                          
+   346                          remaps: ; 4 keyboard sets of PETSCII characters indexed by scancode
+   347  c2d9 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   348  c2f9 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
    349                          
-   350  c38d 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-   351  c3ad 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   350  c319 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   351  c339 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
    352                          
-   353                          char_to_scan: ; 4 sets of scancodes indexed by PETSCII characters
-   354  c3cd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   355  c3dd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   356  c3ed ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   357  c3fd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   358  c40d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   359  c41d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   360  c42d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   361  c43d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   362  c44d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   363  c45d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   364  c46d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   365  c47d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   366  c48d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   367  c49d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   368  c4ad ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   369  c4bd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   370  c4cd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   371  c4dd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   372  c4ed ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   373  c4fd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   374                          
-   375  c50d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   376  c51d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   377  c52d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   378  c53d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   379  c54d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   380  c55d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   381  c56d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   382  c57d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   383  c58d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   384  c59d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   385  c5ad ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   386  c5bd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   387  c5cd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   388  c5dd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   389  c5ed ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   390  c5fd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   391  c60d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   392  c61d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   393  c62d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   394  c63d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   395                          
-   396  c64d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   397  c65d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   398  c66d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   399  c67d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   400  c68d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   401  c69d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   402  c6ad ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   403  c6bd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   404  c6cd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   405  c6dd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   406  c6ed ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   407  c6fd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   408  c70d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   409  c71d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   410  c72d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   411  c73d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   412  c74d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   413  c75d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   414  c76d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   415  c77d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   416                          
-   417  c78d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   418  c79d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   419  c7ad ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   420  c7bd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   421  c7cd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   422  c7dd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   423  c7ed ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   424  c7fd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   425  c80d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   426  c81d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   427  c82d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   428  c83d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   429  c84d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   430  c85d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   431  c86d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   432  c87d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   433  c88d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   434  c89d ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   435  c8ad ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   436  c8bd ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
-   437                          
-   438                          rom_maps: ; addresses of maps in ROM
-   439  c8cd 0000                   !word 0 ; unshifted
-   440  c8cf 0000                   !word 0 ; shifted
-   441  c8d1 0000                   !word 0 ; commodore
-   442  c8d3 0000                   !word 0 ; control
+   353  c359 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   354  c379 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   355                          
+   356  c399 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   357  c3b9 0000000000000000...    !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+   358                          
+   359                          char_to_scan: ; 4 sets of scancodes indexed by PETSCII characters
+   360  c3d9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   361  c3e9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   362  c3f9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   363  c409 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   364  c419 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   365  c429 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   366  c439 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   367  c449 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   368  c459 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   369  c469 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   370  c479 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   371  c489 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   372  c499 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   373  c4a9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   374  c4b9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   375  c4c9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   376  c4d9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   377  c4e9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   378  c4f9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   379  c509 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   380                          
+   381  c519 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   382  c529 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   383  c539 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   384  c549 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   385  c559 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   386  c569 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   387  c579 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   388  c589 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   389  c599 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   390  c5a9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   391  c5b9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   392  c5c9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   393  c5d9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   394  c5e9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   395  c5f9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   396  c609 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   397  c619 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   398  c629 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   399  c639 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   400  c649 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   401                          
+   402  c659 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   403  c669 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   404  c679 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   405  c689 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   406  c699 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   407  c6a9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   408  c6b9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   409  c6c9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   410  c6d9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   411  c6e9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   412  c6f9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   413  c709 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   414  c719 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   415  c729 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   416  c739 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   417  c749 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   418  c759 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   419  c769 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   420  c779 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   421  c789 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   422                          
+   423  c799 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   424  c7a9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   425  c7b9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   426  c7c9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   427  c7d9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   428  c7e9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   429  c7f9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   430  c809 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   431  c819 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   432  c829 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   433  c839 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   434  c849 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   435  c859 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   436  c869 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   437  c879 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   438  c889 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   439  c899 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   440  c8a9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   441  c8b9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
+   442  c8c9 ffffffffffffffff...    !byte 255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
    443                          
-   444                          mult_x18:
-   445  c8d5 00122436485a           !byte 0, 18, 36, 54, 72, 90
-   446                          
-   447  c8db 00                 row_y: !byte 0
-   448  c8dc 00                 col_x: !byte 0
+   444                          rom_maps: ; addresses of maps in ROM
+   445  c8d9 0000                   !word 0 ; unshifted
+   446  c8db 0000                   !word 0 ; shifted
+   447  c8dd 0000                   !word 0 ; commodore
+   448  c8df 0000                   !word 0 ; control
    449                          
-   450                          xystrings:
-   451                              ; !text 21,1,18,"SCANCODE",146,"   $",0
-   452                              ; !text 22,2,18,"PETSCII",146,"    $",0
-   453                              ; !text 26,4,"UNSHIFTED",0
-   454                              ; !text 21,5,"UPPERCASE/GRAPHICS",0
-   455                              ; !text 26,6,18,"C64.KEY",0
-   456                              ; !text 26,11,"[FIND] F1/F2",0
-   457                              ; !text 26,12,"[FG+-]",0
-   458                              ; !text 26,13,"[BG+-]",0
-   459                              ; !text 26,14,"[BORD]",0
-   460                              ; !text 26,15,"[TEST]",0
-   461                              ; !text 26,16,"[LOAD]",0
-   462                              ; !text 26,17,"[SAVE]",0
-   463                              ; !text 26,18,"[EXIT]",0
-   464                              ; !text 23,22,18,"KEYMAP EDITOR",0
-   465  c8dd 181612433634204b...    !text 24,22,18,"C64 KEYMAPS",0
-   466  c8ec 1617284329323032...    !text 22,23,"(C)2025 DAVERVW",0
-   467  c8fe 1518474954485542...    !text 21,24,"GITHUB.COM/DAVERVW",0
+   450                          mult_x18:
+   451  c8e1 00122436485a           !byte 0, 18, 36, 54, 72, 90
+   452                          
+   453  c8e7 00                 row_y: !byte 0
+   454  c8e8 00                 col_x: !byte 0
+   455                          
+   456                          xystrings:
+   457                              ; !text 21,1,18,"SCANCODE",146,"   $",0
+   458                              ; !text 22,2,18,"PETSCII",146,"    $",0
+   459                              ; !text 26,4,"UNSHIFTED",0
+   460                              ; !text 21,5,"UPPERCASE/GRAPHICS",0
+   461                              ; !text 26,6,18,"C64.KEY",0
+   462                              ; !text 26,11,"[FIND] F1/F2",0
+   463                              ; !text 26,12,"[FG+-]",0
+   464                              ; !text 26,13,"[BG+-]",0
+   465                              ; !text 26,14,"[BORD]",0
+   466                              ; !text 26,15,"[TEST]",0
+   467                              ; !text 26,16,"[LOAD]",0
+   468                              ; !text 26,17,"[SAVE]",0
+   469                              ; !text 26,18,"[EXIT]",0
+   470                              ; !text 23,22,18,"KEYMAP EDITOR",0
+   471  c8e9 181612433634204b...    !text 24,22,18,"C64 KEYMAPS",0
+   472  c8f8 1617284329323032...    !text 22,23,"(C)2025 DAVERVW",0
+   473  c90a 1518474954485542...    !text 21,24,"GITHUB.COM/DAVERVW",0
+   474  c91f 000000                 !text 0,0,0

@@ -208,13 +208,19 @@ display_char_at_xy:
     cmp #32 ; space
 +   bne +
     ldx #1
-    sta $c7
+    stx $c7
     bne ++
 +   cmp #13 ; return ^M
     bne +
     ldx #1
-    sta $c7
+    stx $c7
     lda #'M'
+    bne ++
++   cmp #141 ; shift+return ^M
+    bne +
+    ldx #1
+    stx $c7
+    lda #'m'
     bne ++
 +   ldx #1
     stx $d4 ; quote mode just in case for control characters
