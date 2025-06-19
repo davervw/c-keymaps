@@ -10,8 +10,6 @@
 ; or modernization (more closely match modern keyboard layouts)
 ;
 ; currently displays keyboard maps, port of BASIC code to 6502
-;
-; TODO: editor functionality
 
 chrout = $ffd2
 getkey = $ffe4
@@ -23,6 +21,7 @@ physline = $d6
 logcol = $d3
 color = 646
 screenpage = 648
+remaps_dest = $08fc
 
 * = $c000
 
@@ -34,28 +33,8 @@ init:
     jsr copy_map_addrs
     jsr copy_maps
     jsr compute_scan_xys
-    lda #147
-    jsr chrout
-    lda #0
-    ldx #1
-    ldy #1
-    jsr display_map
-    lda #1
-    ldx #1
-    ldy #7
-    jsr display_map
-    lda #2
-    ldx #1
-    ldy #13
-    jsr display_map
 
-    lda #3
-    ldx #1
-    ldy #19
-    jsr display_map
-    ldx #<xystrings
-    ldy #>xystrings
-    jsr display_xystrs
+    jsr redraw_screen
 
     ldy #0
     sty last_physline
@@ -72,8 +51,43 @@ init:
     tax
     lda inverse_colors, x
     sta inv_color
+    jsr color_the_codes
+    jmp main_loop
 
-; main loop
+redraw_screen:
+    lda #0
+    sta $d4
+    sta $d8
+
+    lda #147
+    jsr chrout
+    
+    lda #0
+    ldx #1
+    ldy #1
+    jsr display_map
+    lda #1
+    ldx #1
+    ldy #7
+    jsr display_map
+    lda #2
+    ldx #1
+    ldy #13
+    jsr display_map
+    lda #3
+    ldx #1
+    ldy #19
+    jsr display_map
+
+    ldx #<xystrings
+    ldy #>xystrings
+    jsr display_xystrs
+
+    lda #$ff
+    sta last_map
+    rts
+
+main_loop:
 --  jsr check_cursor_moved
     jsr blinkon
 -   jsr chkblink
@@ -96,9 +110,13 @@ init:
     bne +
     jsr cursor_left
     jmp --
-+   cmp #19
++   cmp #9 ; ^I
     bne +
-    jsr cursor_home
+    jsr cursor_tab
+    jmp --
++   cmp #19 ; home
+    bne +
+    jsr cursor_tab
     jmp --
 +   cmp #133 ; F1
     bne +
@@ -108,25 +126,431 @@ init:
     bne +
     jsr bg_color_dec
     jmp --
++   cmp #134 ; F3
+    bne +
+    inc $d020 ; border
+    jmp --
 +   cmp #138 ; F4
     bne +
-    jsr border_color_inc
+    dec $d020 ; border
     jmp --
-+   cmp #140 ; F8
++   cmp #136 ; F7
     bne +
--   lda #147
-    jmp chrout ; and !!!EXIT!!!
+    jmp save_map
 +   cmp #3 ; STOP
     bne +
 --- lda 197
     cmp #64
     bne --- ; wait until key released
-    beq -
+    lda #147
+    jmp chrout ; and !!!EXIT!!!
++   cmp #13
+    bne +
+    jsr pick_from_chart
+    jmp --
++   cmp #18 ; reverse on
+    bne +
+    ldx $d021
+    lda fg_color
+    sta $d021
+    txa
+    and #$F
+    sta color
+    jmp start
++   cmp #146 ; reverse off
+    bne +
+    ldx inv_color
+    lda fg_color
+    sta inv_color
+    txa
+    and #$F
+    sta color
+    jmp start
 +   jsr check_color
+    jsr edit_key
     jmp --
 
 reserved:
     brk
+
+save_map:
+    ldy #0
+    ldx #driver_length
+-   lda driver, y
+    sta $800, y
+    iny
+    dex
+    bne -
+    
+    ldy #0
+-   lda remaps, y
+    sta remaps_dest, y
+    iny
+    bne -
+    lda remaps+256
+    sta remaps_dest+256
+    lda remaps+257
+    sta remaps_dest+257
+    lda remaps+258
+    sta remaps_dest+258
+    lda remaps+259
+    sta remaps_dest+259
+
+-   lda reset_basic, y
+    beq +
+    jsr chrout
+    iny
+    bne -
++
+    lda #0
+    sta 198
+    ldy #0
+-   lda save_strokes, y
+    beq +
+    sta 631,y
+    iny
+    inc 198
+    bne -
+
++   rts ; !!!EXIT!!!
+
+edit_key:
+    sta $02
+    ldx logcol
+    ldy physline
+    jsr get_scancode_index
+    lda scan_layout, y
+    cmp #$ff
+    bne +
+    inc logcol
+    bne ++
++   tay
+    lda scancode_x, y
+    sta $03
+    lda scancode_y, y
+    sta $04
+    lda $02
+    sta ($fb),y
+    ldx #1
+    stx col_x
+    ldy $ff
+    lda mult_x6,y
+    tay
+    iny
+    sty row_y
+    lda $02
+    ldx $03
+    ldy $04
+    jsr display_char_at_xy ; assumes drawing keyboard with origin set, that's why we moved the origin and x/y
+++  lda logcol
+    cmp #19
+    bcc +
+    lda #1
+    sta logcol
++   rts
+
+pick_from_chart:
+    ldx logcol
+    ldy physline
+    stx $a3
+    sty $a4
+    jsr display_chr_chart
+    pha
+    jsr redraw_screen
+    lda #0
+    sta col_x
+    sta row_y
+    ldx $a3
+    ldy $a4
+    jsr locate_xy
+    pla
+    jsr edit_key
+    lda #0
+    sta col_x
+    sta row_y
+    rts
+
+display_chr_chart:
+    ; clear screen, fill with invisible (for now) reverse spaces
+    lda $d021
+    and #$F
+    ldx #0
+-   sta $d800,x
+    sta $d900,x
+    sta $da00,x
+    sta $db00,x
+    inx
+    bne -
+    lda screenpage
+    sta $fc
+    lda #$a0
+    ldx #4
+    ldy #0
+    sty $fb
+-   sta ($fb),y
+    iny
+    bne -
+    inc $fc
+    dex
+    bne -
+
+    ldx #<xyfind
+    ldy #>xyfind
+    jsr display_xystr
+    ldx #<xyfind_done
+    ldy #>xyfind_done
+    jsr display_xystr
+    ldx #<xystop
+    ldy #>xystop
+    jsr display_xystr
+
+    lda #0
+    sta $ff
+    sta $fb
+    sta $fc
+    lda #12
+    sta col_x
+    lda #4
+    sta row_y
+
+    lda inv_color
+    sta color
+    ldx #0
+    ldy #0
+    jsr locate_xy
+    lda #'0'
+-   jsr chrout
+    clc
+    adc #1
+    cmp #'G'
+    beq +
+    cmp #0x3A
+    bne -
+    lda #'A'
+    bne -
++   
+    dec col_x
+    lda #'0'
+    sta $fd
+-   inc row_y
+    ldx #0
+    ldy #0
+    jsr display_char_at_xy
+    clc
+    adc #1
+    cmp #'G'
+    beq +
+    cmp #0x3A
+    bne -
+    lda #'A'
+    bne -
++   inc col_x
+    lda #5
+    sta row_y
+    lda fg_color
+    sta color
+
+-   lda $ff
+    cmp #$20
+    beq ++
+    cmp #$a0
+    bne +
+++  jsr chrout
+    jmp ++
++   ldx $fb
+    ldy $fc
+    jsr display_char_at_xy
+++  inc $ff
+    beq +
+    inc $fb
+    lda $fb
+    cmp #$10
+    bne -
+    lda #0
+    sta $fb
+    inc $fc
+    bne -
+
++   ldx #0
+    ldy #0
+    jsr locate_xy
+--  jsr draw_target_on
+    jsr blinkon
+-   jsr chkblink
+    jsr getkey
+    beq -
+    jsr blinkoff
+    sta $ff
+    jsr draw_target_off
+    lda $ff
+    cmp #$11 ; cursor down
+    bne +
+    sec
+    lda physline
+    sbc row_y
+    cmp #$F
+    bcs --
+    lda #$11
+    jsr chrout
+    jmp --
++   cmp #$91 ; cursor up
+    bne +
+    sec
+    lda physline
+    sbc row_y
+    cmp #1
+    bcc --
+    lda #$91
+    jsr chrout
+    jmp --
++   cmp #$1d
+    bne +
+    sec
+    lda logcol
+    sbc col_x
+    cmp #15
+    bcs --
+    lda #$1d
+    jsr chrout
+    jmp --
++   cmp #$9d
+    bne +
+    sec
+    lda logcol
+    sbc col_x
+    cmp #1
+    bcc --
+    lda #$9d
+    jsr chrout
+    jmp --
++   cmp #134 ; F3 - find
+    bne +
+    ldx col_x
+    ldy row_y
+    stx $fd
+    sty $fe
+    ldx #<xyfind
+    ldy #>xyfind
+    jsr display_xystr
+    jsr blinkon
+-   jsr chkblink
+    jsr getkey
+    beq -
+    sta $ff
+    jsr blinkoff
+    ldx #<xyfind_done
+    ldy #>xyfind_done
+    jsr display_xystr
+    ldx $fd
+    ldy $fe
+    stx col_x
+    sty row_y
+    lda $ff
+--- lsr
+    lsr
+    lsr
+    lsr
+    tay
+    lda $ff
+    and #$F
+    tax
+    jsr locate_xy
+    jmp --
++   cmp #3
+    bne +
+    lda #$ff
+    rts
++   cmp #13
+    beq +
+    sta $ff
+    jmp ---
++   sec
+    lda physline
+    sbc row_y
+    asl
+    asl
+    asl
+    asl
+    sta $ff
+    sec
+    lda logcol
+    sbc col_x
+    ora $ff
+    rts
+
+draw_target_on
+    lda inv_color
+    sta $02
+    jmp draw_target
+
+draw_target_off
+    lda $d021
+    sta $02
+    jmp draw_target
+
+draw_target:
+    ldy #0
+    sty $fb
+    lda #$d8
+    sta $fc
+    ldx physline
+-   jsr target_plus_40
+    dex
+    bne -
+    ldy col_x
+    dey
+    dey
+    lda $02
+-   sta ($fb),y
+    dey
+    bpl -
+    clc
+    lda col_x
+    adc #16
+    tay
+    lda $02
+-   sta ($fb),y
+    iny
+    cpy #40
+    bcc -
+
+    ldy #0
+    sty $fb
+    lda #$d8
+    sta $fc
+    ldx row_y
+    dex
+    ldy logcol
+-   lda $02
+    sta ($fb),y
+    jsr target_plus_40
+    dex
+    bne -
+    ldx #17
+-   jsr target_plus_40
+    dex
+    bne -
+    sec
+    lda #25
+    sbc row_y
+    sbc #16
+    tax
+-   lda $02
+    sta ($fb),y
+    jsr target_plus_40
+    dex
+    bne -
+
+    rts
+
+target_plus_40:
+    clc
+    lda $fb
+    adc #40
+    sta $fb
+    bcc +
+    inc $fc
++   rts
 
 cursor_down:
     ldx physline
@@ -196,14 +620,16 @@ cursor_left:
 +   jsr chrout
     rts
 
-cursor_home:
-    lda #0
-    sta physline
-    lda #13
-    jsr chrout
-    lda #1
-    sta logcol
-    rts
+cursor_tab:
+    clc
+    lda physline
+    adc #6
+    cmp #24
+    bcc +
+    sbc #24
++   tay
+    ldx logcol
+    jmp locate_xy
 
 bg_color_inc:
 -   inc $d021
@@ -219,10 +645,6 @@ bg_color_dec:
     and #15
     cmp fg_color
     beq -
-    rts
-
-border_color_inc:
-    inc $d020
     rts
 
 check_color:
@@ -251,38 +673,8 @@ check_cursor_moved:
 ++  rts
 
 display_codes:
-    lda #0
-    sta $ff ; map #
-    lda #<remaps
-    sta $fb
-    lda #>remaps
-    sta $fc    
--   cpy #6
-    bcc +
-    inc $ff
-    tya
-    sbc #6
-    tay
-    clc
-    lda $fb
-    adc #65
-    sta $fb
-    bcc -
-    inc $fc
-    bne -
-+   dex ; change col 1 to 0, etc.
-    txa
-    dey ; change line 1 to 0, etc.
-    cpy #4
-    bne +
-    cmp #3 ; spacebar starts at col 3
-    bcc +
-    cmp #12 ; spacebar ends at col 11
-    bcs +
-    lda #3 ; spacebar is always at 3,4 (0 based)
-+   clc
-    adc mult_x18,y
-    tay
+    jsr get_scancode_index
+    jsr check_redraw_frame
     lda #70 ; offset of screen to display code at
     sta $fd
     lda screenpage
@@ -324,11 +716,121 @@ display_codes:
     bne +++
     ldx #<state_control
     ldy #>state_control
-++  jsr display_xystr
+++  lda inv_color
+    sta color
+    jsr display_xystr
+    lda fg_color
+    sta color
     ldx last_logcol
     ldy last_physline
     jsr locate_xy
 +++ rts
+
+get_scancode_index: ; output: $ff=map, 
+    lda #0
+    sta $ff ; map #
+    lda #<remaps
+    sta $fb
+    lda #>remaps
+    sta $fc    
+-   cpy #6
+    bcc +
+    inc $ff
+    tya
+    sbc #6
+    tay
+    clc
+    lda $fb
+    adc #65
+    sta $fb
+    bcc -
+    inc $fc
+    bne -
++   dex ; change col 1 to 0, etc.
+    txa
+    dey ; change line 1 to 0, etc.
+    cpy #4
+    bne +
+    cmp #3 ; spacebar starts at col 3
+    bcc +
+    cmp #12 ; spacebar ends at col 11
+    bcs +
+    lda #3 ; spacebar is always at 3,4 (0 based)
++   clc
+    adc mult_x18,y
+    tay
+    rts
+
+check_redraw_frame:
+    lda $ff
+    cmp last_map
+    beq ++
+    clc
+    ror $03 ; high bit clear = erase mode
+    ldy last_map
+    cpy #4
+    bcs + ; branch out of range
+    jsr draw_frame
++   sec
+    ror $03 ; high bit set = draw mode
+    lda inv_color
+    sta color
+    ldy $ff
+    sty last_map
+    jsr draw_frame
+    ldx last_logcol
+    ldy last_physline
+    jsr locate_xy
+    lda fg_color
+    sta color
+++  rts
+
+draw_frame:
+    lda mult_x6,y
+    tay
+    jsr draw_frame_line
+    iny
+    lda #5
+    sta $02
+-   jsr draw_frame_sides
+    iny
+    dec $02
+    bne -
+    jsr draw_frame_line
+    rts
+
+draw_frame_line:
+    ldx #0
+    jsr locate_xy
+    bit $03
+    bpl +
+    lda #18 ; reverse
+    jsr chrout
++   ldx #20
+    lda #32
+-   jsr chrout
+    dex
+    bne -
+    rts
+
+draw_frame_sides:
+    ldx #0
+    jsr locate_xy
+    bit $03
+    bpl +
+    lda #18 ; reverse
+    jsr chrout
++   lda #32
+    jsr chrout
+    ldx #19
+    jsr locate_xy
+    bit $03
+    bpl +
+    lda #18 ; reverse
+    jsr chrout
++   lda #32
+    jsr chrout
+    rts
 
 display_hex: ; .A=value, $fd/fe screen dest
     tay
@@ -541,11 +1043,25 @@ display_map: ; .a = map (0..3), .x/.y = screen coordinates
     bcc -
     rts
 
+display_char:
+    pha
+    sec
+    lda physline
+    sbc row_y
+    tay
+    lda logcol
+    sbc col_x
+    tax
+    pla
+    ; fall through display_char_at_xy
+
 display_char_at_xy:
     pha
     lda #0
     sta $fe
     cpy #4 ; spacebar row?
+    bne +
+    cpx #3 ; spacebar col?
     bne +
     lda #8 ; repeat count for spacebar position
 +   sta $fe
@@ -577,6 +1093,9 @@ display_char_at_xy:
     stx $d8 ; number of inserts just in case for control characters
 ++
 -   jsr chrout
++   ldx #0
+    stx $d4 ; reset quote mode
+    stx $d8 ; reset inserts
     dec $fe
     bpl - ; repeat for spacebar
     rts
@@ -661,6 +1180,20 @@ compute_scan_xys:
     bpl --
     rts
 
+color_the_codes:
+    lda #0
+    sta $fb
+    lda #$d8
+    sta $fc
+    lda inv_color
+    ldy #61
+    ldx #17
+-   sta ($fb),y
+    iny
+    dex
+    bne -
+    rts
+
 ; this is the hardware scan code physical layout as a 5x18 array
 ; keys are independent of internationalization, localization
 ; because these are scancodes - the physical key representations
@@ -670,8 +1203,8 @@ compute_scan_xys:
 ; each key 0..63 should be shown exactly once, with 255 for whitespace (not a key)
 ;
 ; the purpose of this array is to show where physical keys are
-; It does not change.  !!! DO NOT CHANGE !!!
-scan_layout: ; 5 rows, 18 columns = 90 bytes
+; It does not change.  !!! DO NOT CHANGE EXCEPT FOR COSMETIC REASONS !!!
+scan_layout: ; 5 rows, 18 columns = 90 bytes !!! CODE DEPENDS ON THESE DIMENSIONS !!!
     !byte 57,56,59,8,11,16,19,24,27,32,35,40,43,48,51,0,255,4
     !byte 58,255,62,9,14,17,22,25,30,33,38,41,46,49,54,255,255,5
     !byte 63,255,10,13,18,21,26,29,34,37,42,45,50,53,255,1,255,6
@@ -690,6 +1223,9 @@ rom_maps: ; addresses of maps in ROM
     !word 0 ; commodore
     !word 0 ; control
 
+mult_x6:
+    !byte 0, 6, 12, 18, 24
+
 mult_x18:
     !byte 0, 18, 36, 54, 72, 90
 
@@ -699,6 +1235,7 @@ col_x: !byte 0
 
 last_physline: !byte 0
 last_logcol: !byte 0
+last_map: !byte 0
 
 jiffyblink: !byte 0
 save_cursor_char: !byte 0
@@ -711,23 +1248,24 @@ state_commodore: !text 25,4,"COMMODORE",0
 state_control:   !text 25,4," CONTROL ",0
 
 xystrings:
-    !text 21,1,18,"SCANCODE",146,"          ",0
-    !text 22,2,18,"PETSCII",146,"          ",0
+    !text 21,1,"SCANCODE","          ",0
+    !text 22,2,"PETSCII","          ",0
 ;    !text 21,5,"UPPERCASE/GRAPHICS",0
 ;    !text 26,6,18,"C64.KEY",0
-    !text 26,11,"[BG+ ] F1",0
-    !text 26,12,"[BG- ] F2",0
-;    !text 26,13,"[FIND] F3",0
-    !text 26,14,"[BRD+] F4",0
-;    !text 26,15,"[SAVE] F5",0
-;    !text 26,16,"[LOAD] F6",0
-;    !text 26,17,"[TEST] F7",0
-    !text 26,18,"[EXIT] F8",0
-    ;!text 23,22,18,"KEYMAP EDITOR",0
-    !text 23,22,18,"C64 KEYMAPS",0
-    !text 22,23,"(C)2025 DAVERVW",0
+    !text 23,13,"F1 BACKGROUND+",0
+    !text 23,14,"F2 BACKGROUND-",0
+    !text 23,15,"F3 BORDER+",0
+    !text 23,16,"F4 BORDER-",0
+    !text 23,17,"F7 SAVE",0
+    !text 23,21,18,"KEYMAP EDITOR",0
+    !text 22,22,"(C)2025 DAVERVW",0
+    !text 24,23,"MIT LICENSE",0
     !text 21,24,"GITHUB.COM/DAVERVW",0
     !text 0,0,0
+
+xyfind:      !text 1,1,"F3   FIND:",0
+xyfind_done: !text 10,1,"  ",0
+xystop:      !text 1,2,"STOP CANCEL",0
 
 ; control characters that change colors, in order colors 0..15
 color_chars !byte 144,5,28,159,156,30,31,158,129,149,150,151,152,153,154,155
@@ -736,6 +1274,25 @@ color_chars !byte 144,5,28,159,156,30,31,158,129,149,150,151,152,153,154,155
 inverse_colors !byte 1,0,5,10,13,2,8,9,6,7,3,14,15,4,11,12
 
 hexcodes !text "0123456789",1,2,3,4,5,6 ; screen codes
+
+reset_basic !text 147,"POKE43,1:POKE44,8:POKE45,0:POKE46,10:CLR:LIST",0
+save_strokes !text 19,13,"SAVE",34,0
+
+driver: ; keyboard driver BASIC and assembler code targeting $0801
+!byte $00,$20,$08,$0a,$00,$8f,$20,$4b,$45,$59,$42,$4f,$41,$52,$44,$20
+!byte $52,$45,$4d,$41,$50,$50,$45,$52,$20,$44,$52,$49,$56,$45,$52,$00
+!byte $42,$08,$14,$00,$8f,$20,$32,$30,$32,$35,$20,$42,$59,$20,$44,$41
+!byte $56,$49,$44,$20,$52,$2e,$20,$56,$41,$4e,$20,$57,$41,$47,$4e,$45
+!byte $52,$00,$56,$08,$1e,$00,$8f,$20,$50,$55,$42,$4c,$49,$43,$20,$44
+!byte $4f,$4d,$41,$49,$4e,$00,$63,$08,$28,$00,$9e,$20,$32,$31,$35,$31
+!byte $3a,$a2,$00,$00,$00,$a2,$06,$a9,$42,$a2,$06,$a0,$08,$20,$92,$08
+!byte $a2,$25,$a0,$08,$20,$92,$08,$a9,$0a,$85,$2c,$a9,$00,$8d,$00,$0a
+!byte $a2,$47,$a0,$08,$20,$92,$08,$a2,$a7,$a0,$08,$8e,$8f,$02,$8c,$90
+!byte $02,$60,$86,$fb,$84,$fc,$a0,$00,$b1,$fb,$f0,$06,$20,$d2,$ff,$c8
+!byte $d0,$f6,$a9,$0d,$4c,$d2,$ff,$a2,$00,$ad,$8d,$02,$29,$07,$f0,$04
+!byte $e8,$4a,$d0,$fc,$a9,$fc,$a0,$08,$e0,$00,$f0,$09,$18,$69,$41,$90
+!byte $01,$c8,$ca,$d0,$f7,$85,$f5,$84,$f6,$4c,$e0,$ea,$00,$00,$00,$00
+driver_length = * - driver
 
 remaps = * ; 4 keyboard sets of PETSCII characters indexed by scancode (260 bytes total, 65 bytes each set)
 
