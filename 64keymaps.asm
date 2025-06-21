@@ -174,6 +174,7 @@ reserved:
     brk
 
 save_map:
+    ; copy driver
     ldy #0
     ldx #driver_length
 -   lda driver, y
@@ -181,21 +182,46 @@ save_map:
     iny
     dex
     bne -
-    
-    ldy #0
--   lda remaps, y
-    sta remaps_dest, y
+
+    ; pad first page with zeros
+    txa
+-   sta $800, y
     iny
     bne -
-    lda remaps+256
-    sta remaps_dest+256
-    lda remaps+257
-    sta remaps_dest+257
-    lda remaps+258
-    sta remaps_dest+258
-    lda remaps+259
-    sta remaps_dest+259
 
+    ; copy 65*4 = 260 bytes   
+    lda #<remaps_dest
+    sta $fb
+    lda #>remaps_dest
+    sta $fc
+-   lda remaps, y
+    sta ($fb),y
+    iny
+    bne -
+    inc $fc
+    ldx #4
+-   lda remaps+256, y
+    sta ($fb),y
+    iny
+    dex
+    bne -
+
+    ; pad the last page with zeros
+    tya
+    clc
+    adc $fb
+    beq ++ ; nothing to pad
+    tay
+    lda #0
+    sta $fb
+    bcc +
+    inc $fc
++
+-   sta ($fb),y
+    iny
+    bne -
+    
+++  ldy #0
 -   lda reset_basic, y
     beq +
     jsr chrout
@@ -1298,7 +1324,7 @@ driver: ; keyboard driver BASIC and assembler code targeting $0801
 !byte $56,$49,$44,$20,$52,$2e,$20,$56,$41,$4e,$20,$57,$41,$47,$4e,$45
 !byte $52,$00,$56,$08,$1e,$00,$8f,$20,$50,$55,$42,$4c,$49,$43,$20,$44
 !byte $4f,$4d,$41,$49,$4e,$00,$63,$08,$28,$00,$9e,$20,$32,$31,$35,$31
-!byte $3a,$a2,$00,$00,$00,$a2,$06,$a9,$42,$a2,$06,$a0,$08,$20,$92,$08
+!byte $3a,$a2,$00,$00,$00,$00,$00,$a9,$42,$a2,$06,$a0,$08,$20,$92,$08
 !byte $a2,$25,$a0,$08,$20,$92,$08,$a9,$0a,$85,$2c,$a9,$00,$8d,$00,$0a
 !byte $a2,$47,$a0,$08,$20,$92,$08,$a2,$a7,$a0,$08,$8e,$8f,$02,$8c,$90
 !byte $02,$60,$86,$fb,$84,$fc,$a0,$00,$b1,$fb,$f0,$06,$20,$d2,$ff,$c8
