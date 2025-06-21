@@ -255,6 +255,7 @@ pick_from_chart:
     stx $a3
     sty $a4
     jsr display_chr_chart
+    php
     pha
     jsr redraw_screen
     lda #0
@@ -264,8 +265,12 @@ pick_from_chart:
     ldy $a4
     jsr locate_xy
     pla
-    jsr edit_key
-    lda #0
+    plp
+    bcc +
+    jsr display_codes
+    jmp ++
++   jsr edit_key
+++  lda #0
     sta col_x
     sta row_y
     rts
@@ -456,9 +461,10 @@ display_chr_chart:
     tax
     jsr locate_xy
     jmp --
-+   cmp #3
++   cmp #3 ; STOP
     bne +
     lda #$ff
+    sec ; not okay
     rts
 +   cmp #13
     beq +
@@ -476,6 +482,7 @@ display_chr_chart:
     lda logcol
     sbc col_x
     ora $ff
+    clc ; OK
     rts
 
 draw_target_on
@@ -1250,13 +1257,19 @@ state_control:   !text 25,4," CONTROL ",0
 xystrings:
     !text 21,1,"SCANCODE","          ",0
     !text 22,2,"PETSCII","          ",0
-;    !text 21,5,"UPPERCASE/GRAPHICS",0
-;    !text 26,6,18,"C64.KEY",0
+;
+    !text 23,7,"NAVIGATION:",0
+
+    !text 23,9,"CURSOR, HOME,",0
+    !text 23,10,"COLORS, RVS,",0
+    !text 23,11,"RETURN, STOP", 0
+;
     !text 23,13,"F1 BACKGROUND+",0
     !text 23,14,"F2 BACKGROUND-",0
     !text 23,15,"F3 BORDER+",0
     !text 23,16,"F4 BORDER-",0
     !text 23,17,"F7 SAVE",0
+;
     !text 23,21,18,"KEYMAP EDITOR",0
     !text 22,22,"(C)2025 DAVERVW",0
     !text 24,23,"MIT LICENSE",0
