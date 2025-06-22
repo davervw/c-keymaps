@@ -17,11 +17,18 @@ getkey = $ffe4
 jiffyclock = $a2
 textptr = $d1 ;/d2 - pointer to current logical screen line, leftmost column
 colorptr = $f3 ;/f4 - matching pointer to color memory
+
+reverse = $c7
 physline = $d6
 logcol = $d3
+quote = $d4
+inserts = $d8
 color = 646
 screenpage = 648
+shiftstate = $28d
 remaps_dest = $08fc
+border = $d020
+background = $d021
 
 * = $c000
 
@@ -57,8 +64,8 @@ redraw_init:
 
 redraw_screen:
     lda #0
-    sta $d4
-    sta $d8
+    sta quote
+    sta inserts
 
     lda #147
     jsr chrout
@@ -129,11 +136,11 @@ main_loop:
     jmp --
 +   cmp #134 ; F3
     bne +
-    inc $d020 ; border
+    inc border
     jmp --
 +   cmp #138 ; F4
     bne +
-    dec $d020 ; border
+    dec border
     jmp --
 +   cmp #136 ; F7
     bne +
@@ -151,9 +158,9 @@ main_loop:
     jmp --
 +   cmp #18 ; reverse on
     bne +
-    ldx $d021
+    ldx background
     lda fg_color
-    sta $d021
+    sta background
     txa
     and #$F
     sta color
@@ -309,7 +316,7 @@ pick_from_chart:
 
 display_chr_chart:
     ; clear screen, fill with invisible (for now) reverse spaces
-    lda $d021
+    lda background
     and #$F
     ldx #0
 -   sta $d800,x
@@ -523,7 +530,7 @@ draw_target_on
     jmp draw_target
 
 draw_target_off
-    lda $d021
+    lda background
     sta $02
     jmp draw_target
 
@@ -671,16 +678,16 @@ cursor_tab:
     jmp locate_xy
 
 bg_color_inc:
--   inc $d021
-    lda $d021
+-   inc background
+    lda background
     and #15
     cmp fg_color
     beq -
     rts
 
 bg_color_dec:
--   dec $d021
-    lda $d021
+-   dec background
+    lda background
     and #15
     cmp fg_color
     beq -
@@ -993,12 +1000,12 @@ copy_map_addrs:
     ; first retrieve addresses to four sets
     sei ; don't allow IRQ to process keyboard and interfere with us
 
-    lda $28d
+    lda shiftstate
     pha ; save existing keyboard shift state
 
     ldy #0
     sty $ff
-    sty $28d ; keyboard shift state (0,1,2,4)
+    sty shiftstate ; keyboard shift state (0,1,2,4)
 -   jsr getmap
     lda $f5
     ldy $ff
@@ -1007,16 +1014,16 @@ copy_map_addrs:
     sta rom_maps+1,y
     inc $ff
     inc $ff
-    lda $28d
+    lda shiftstate
     clc
     bne +
     sec
-+   rol $28d
++   rol shiftstate
     cmp #4
     bcc -
 
     pla
-    sta $28d ; restore shift map
+    sta shiftstate ; restore shift map
 
     cli ; restore keyboard
     rts
@@ -1123,28 +1130,28 @@ display_char_at_xy:
     cmp #32 ; space
 +   bne +
     ldx #1
-    stx $c7
+    stx reverse
     bne ++
 +   cmp #13 ; return ^M
     bne +
     ldx #1
-    stx $c7
+    stx reverse
     lda #'M'
     bne ++
 +   cmp #141 ; shift+return ^M
     bne +
     ldx #1
-    stx $c7
+    stx reverse
     lda #'m'
     bne ++
 +   ldx #1
-    stx $d4 ; quote mode just in case for control characters
-    stx $d8 ; number of inserts just in case for control characters
+    stx quote ; quote mode just in case for control characters
+    stx inserts ; number of inserts just in case for control characters
 ++
 -   jsr chrout
 +   ldx #0
-    stx $d4 ; reset quote mode
-    stx $d8 ; reset inserts
+    stx quote ; reset quote mode
+    stx inserts ; reset inserts
     dec $fe
     bpl - ; repeat for spacebar
     rts
