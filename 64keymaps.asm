@@ -147,11 +147,7 @@ main_loop:
     jmp save_map
 +   cmp #3 ; STOP
     bne +
---- lda 197
-    cmp #64
-    bne --- ; wait until key released
-    lda #147
-    jmp chrout ; and !!!EXIT!!!
+    jmp checkexit ; will not return directly
 +   cmp #13
     bne +
     jsr pick_from_chart
@@ -1250,6 +1246,32 @@ color_the_codes:
     bne -
     rts
 
+checkexit:
+    jsr areyousure
+    beq +
+    jmp redraw_init
++
+-   lda 197
+    cmp #64
+    bne - ; wait until key released (avoids STOP BREAK)
+    ldx #<xybye
+    ldy #>xybye
+    jmp display_xystr ; and !!!EXIT!!!
+
+areyousure:
+    lda #0
+    sta quote
+    sta inserts
+    lda #147
+    jsr chrout
+    ldx #<xyareyousure
+    ldy #>xyareyousure
+    jsr display_xystr
+-   jsr getkey
+    beq -
+    cmp #'Y'
+    rts
+
 ; this is the hardware scan code physical layout as a 5x18 array
 ; keys are independent of internationalization, localization
 ; because these are scancodes - the physical key representations
@@ -1328,6 +1350,9 @@ xystrings:
 xyfind:      !text 1,1,"F3   FIND:",0
 xyfind_done: !text 10,1,"  ",0
 xystop:      !text 1,2,"STOP CANCEL",0
+
+xyareyousure !text 10,12,18,"ARE YOU SURE?",146," (Y/[N])",0
+xybye !text 0,0,147,"BYE",13,0
 
 ; control characters that change colors, in order colors 0..15
 color_chars !byte 144,5,28,159,156,30,31,158,129,149,150,151,152,153,154,155
