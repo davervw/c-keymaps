@@ -800,6 +800,11 @@ get_scancode_index: ; output: $ff=map,
     rts
 
 check_redraw_frame:
+    pha
+    txa
+    pha
+    tya
+    pha
     lda $ff
     cmp last_map
     beq ++
@@ -821,7 +826,12 @@ check_redraw_frame:
     jsr locate_xy
     lda fg_color
     sta color
-++  rts
+++  pla
+    tay
+    pla
+    tax
+    pla
+    rts
 
 draw_frame:
     lda mult_x6,y
