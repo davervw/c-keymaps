@@ -1344,8 +1344,9 @@ driver: ; keyboard driver BASIC and assembler code targeting $0801
 !byte $a2,$47,$a0,$08,$20,$92,$08,$a2,$a7,$a0,$08,$8e,$8f,$02,$8c,$90
 !byte $02,$60,$86,$fb,$84,$fc,$a0,$00,$b1,$fb,$f0,$06,$20,$d2,$ff,$c8
 !byte $d0,$f6,$a9,$0d,$4c,$d2,$ff,$a2,$00,$ad,$8d,$02,$29,$07,$f0,$04
-!byte $e8,$4a,$d0,$fc,$a9,$fc,$a0,$08,$e0,$00,$f0,$09,$18,$69,$41,$90
-!byte $01,$c8,$ca,$d0,$f7,$85,$f5,$84,$f6,$4c,$e0,$ea,$00,$00,$00,$00
+!byte $e8,$4a,$d0,$fc,$e0,$02,$d0,$09,$a5,$cb,$c9,$40,$d0,$03,$4c,$48
+!byte $eb,$a9,$fc,$a0,$08,$e0,$00,$f0,$09,$18,$69,$41,$90,$01,$c8,$ca
+!byte $d0,$f7,$85,$f5,$84,$f6,$4c,$e0,$ea,$00,$00,$00,$00,$00,$00,$00
 driver_length = * - driver
 
 remaps = * ; 4 keyboard sets of PETSCII characters indexed by scancode (260 bytes total, 65 bytes each set)

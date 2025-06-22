@@ -178,7 +178,7 @@
    176                          save_map:
    177                              ; copy driver
    178  c140 a000                   ldy #0
-   179  c142 a2d0                   ldx #driver_length
+   179  c142 a2e0                   ldx #driver_length
    180  c144 b9f5ca             -   lda driver, y
    181  c147 990008                 sta $800, y
    182  c14a c8                     iny
@@ -196,13 +196,13 @@
    194  c157 85fb                   sta $fb
    195  c159 a908                   lda #>remaps_dest
    196  c15b 85fc                   sta $fc
-   197  c15d b9c5cb             -   lda remaps, y
+   197  c15d b9d5cb             -   lda remaps, y
    198  c160 91fb                   sta ($fb),y
    199  c162 c8                     iny
    200  c163 d0f8                   bne -
    201  c165 e6fc                   inc $fc
    202  c167 a204                   ldx #4
-   203  c169 b9c5cc             -   lda remaps+256, y
+   203  c169 b9d5cc             -   lda remaps+256, y
    204  c16c 91fb                   sta ($fb),y
    205  c16e c8                     iny
    206  c16f ca                     dex
@@ -253,9 +253,9 @@
    251  c1b7 e6d3                   inc logcol
    252  c1b9 d033                   bne ++
    253  c1bb a8                 +   tay
-   254  c1bc b9c9cc                 lda scancode_x, y
+   254  c1bc b9d9cc                 lda scancode_x, y
    255  c1bf 8503                   sta $03
-   256  c1c1 b909cd                 lda scancode_y, y
+   256  c1c1 b919cd                 lda scancode_y, y
    257  c1c4 8504                   sta $04
    258  c1c6 a502                   lda $02
    259  c1c8 91fb                   sta ($fb),y
@@ -769,7 +769,7 @@
    767                          get_scancode_index: ; output: $ff=map, 
    768  c5a7 a900                   lda #0
    769  c5a9 85ff                   sta $ff ; map #
-   770  c5ab a9c5                   lda #<remaps
+   770  c5ab a9d5                   lda #<remaps
    771  c5ad 85fb                   sta $fb
    772  c5af a9cb                   lda #>remaps
    773  c5b1 85fc                   sta $fc    
@@ -1024,7 +1024,7 @@
   1022                          
   1023                          copy_maps:
   1024  c75f a200                   ldx #0
-  1025  c761 a9c5                   lda #<remaps
+  1025  c761 a9d5                   lda #<remaps
   1026  c763 85fd                   sta $fd
   1027  c765 a9cb                   lda #>remaps
   1028  c767 85fe                   sta $fe
@@ -1057,7 +1057,7 @@
   1055  c791 8c41c9                 sty row_y
   1056                          
   1057  c794 aa                     tax
-  1058  c795 a9c5                   lda #<remaps
+  1058  c795 a9d5                   lda #<remaps
   1059  c797 85fb                   sta $fb
   1060  c799 a9cb                   lda #>remaps
   1061  c79b 85fc                   sta $fc
@@ -1080,9 +1080,9 @@
   1078  c7b8 f00f                   beq +
   1079                          
   1080  c7ba 8502                   sta $02 ; save character
-  1081  c7bc b9c9cc                 lda scancode_x, y
+  1081  c7bc b9d9cc                 lda scancode_x, y
   1082  c7bf aa                     tax
-  1083  c7c0 b909cd                 lda scancode_y, y
+  1083  c7c0 b919cd                 lda scancode_y, y
   1084  c7c3 a8                     tay
   1085  c7c4 a502                   lda $02 ; restore character
   1086                          
@@ -1220,9 +1220,9 @@
   1218  c8a8 300a                   bmi +
   1219  c8aa a8                     tay
   1220  c8ab 8a                     txa
-  1221  c8ac 99c9cc                 sta scancode_x,y
+  1221  c8ac 99d9cc                 sta scancode_x,y
   1222  c8af a502                   lda $02
-  1223  c8b1 9909cd                 sta scancode_y,y
+  1223  c8b1 9919cd                 sta scancode_y,y
   1224  c8b4 c6ff               +   dec $ff
   1225  c8b6 ca                     dex
   1226  c8b7 10ea                   bpl -
@@ -1346,14 +1346,15 @@
   1344  cb75 a247a008209208a2...!byte $a2,$47,$a0,$08,$20,$92,$08,$a2,$a7,$a0,$08,$8e,$8f,$02,$8c,$90
   1345  cb85 026086fb84fca000...!byte $02,$60,$86,$fb,$84,$fc,$a0,$00,$b1,$fb,$f0,$06,$20,$d2,$ff,$c8
   1346  cb95 d0f6a90d4cd2ffa2...!byte $d0,$f6,$a9,$0d,$4c,$d2,$ff,$a2,$00,$ad,$8d,$02,$29,$07,$f0,$04
-  1347  cba5 e84ad0fca9fca008...!byte $e8,$4a,$d0,$fc,$a9,$fc,$a0,$08,$e0,$00,$f0,$09,$18,$69,$41,$90
-  1348  cbb5 01c8cad0f785f584...!byte $01,$c8,$ca,$d0,$f7,$85,$f5,$84,$f6,$4c,$e0,$ea,$00,$00,$00,$00
-  1349                          driver_length = * - driver
-  1350                          
-  1351                          remaps = * ; 4 keyboard sets of PETSCII characters indexed by scancode (260 bytes total, 65 bytes each set)
-  1352                          
-  1353                          ; coordinates are derived from scan_layout at runtime to avoid redundant maintainance
-  1354                          scancode_x = remaps + 260 ; 64 bytes total
-  1355                          scancode_y = scancode_x + 64 ; 64 bytes total
-  1356                          
-  1357                          finish = scancode_y + 64 ; end
+  1347  cba5 e84ad0fce002d009...!byte $e8,$4a,$d0,$fc,$e0,$02,$d0,$09,$a5,$cb,$c9,$40,$d0,$03,$4c,$48
+  1348  cbb5 eba9fca008e000f0...!byte $eb,$a9,$fc,$a0,$08,$e0,$00,$f0,$09,$18,$69,$41,$90,$01,$c8,$ca
+  1349  cbc5 d0f785f584f64ce0...!byte $d0,$f7,$85,$f5,$84,$f6,$4c,$e0,$ea,$00,$00,$00,$00,$00,$00,$00
+  1350                          driver_length = * - driver
+  1351                          
+  1352                          remaps = * ; 4 keyboard sets of PETSCII characters indexed by scancode (260 bytes total, 65 bytes each set)
+  1353                          
+  1354                          ; coordinates are derived from scan_layout at runtime to avoid redundant maintainance
+  1355                          scancode_x = remaps + 260 ; 64 bytes total
+  1356                          scancode_y = scancode_x + 64 ; 64 bytes total
+  1357                          
+  1358                          finish = scancode_y + 64 ; end
