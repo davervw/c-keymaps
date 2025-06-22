@@ -267,7 +267,12 @@ edit_key:
     lda $02
     ldx $03
     ldy $04
-    jsr display_char_at_xy ; assumes drawing keyboard with origin set, that's why we moved the origin and x/y
+    cmp #$ff
+    bne +
+    lda #32
+    jsr chrout
+    jmp ++
++   jsr display_char_at_xy ; assumes drawing keyboard with origin set, that's why we moved the origin and x/y
 ++  lda logcol
     cmp #19
     bcc +
