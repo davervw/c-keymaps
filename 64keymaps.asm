@@ -34,6 +34,7 @@ init:
     jsr copy_maps
     jsr compute_scan_xys
 
+redraw_init:
     jsr redraw_screen
 
     ldy #0
@@ -156,7 +157,7 @@ main_loop:
     txa
     and #$F
     sta color
-    jmp start
+    jmp redraw_init
 +   cmp #146 ; reverse off
     bne +
     ldx inv_color
@@ -165,7 +166,7 @@ main_loop:
     txa
     and #$F
     sta color
-    jmp start
+    jmp redraw_init
 +   jsr check_color
     jsr edit_key
     jmp --
@@ -696,7 +697,7 @@ check_color:
 +   stx color
     pla ; pull return address
     pla
-    jmp start ; restart program
+    jmp redraw_init ; restart program
 
 check_cursor_moved:
     ldx logcol

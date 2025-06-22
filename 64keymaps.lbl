@@ -3,6 +3,7 @@
 	cursor_right	= $c4bc	; ?
 	draw_target_off	= $c3ea	; ?
 	draw_frame	= $c620	; ?
+	redraw_init	= $c00f
 	col_x	= $c942	; ?
 	main_loop	= $c075	; ?
 	check_color	= $c507	; ?
@@ -54,7 +55,7 @@
 	textptr	= $d1
 	get_scancode_index	= $c5a7	; ?
 	display_decimal	= $c698	; ?
-	start	= $c000
+	start	= $c000	; unused
 	edit_key	= $c1a7	; ?
 	fg_color	= $c948	; ?
 	cursor_down	= $c45e	; ?
