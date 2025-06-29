@@ -52,3 +52,13 @@ WARNING: Save will wipe out any other program loaded at $0801.  Please also ````
 
 (French)
 ![128french.png](media/128french.png)
+
+## Commodore Plus/4
+
+(US)
+![+4keymaps.png](media/+4keymaps.png)
+
+## Commodore 16
+
+(US)
+![16keymaps.png](media/16keymaps.png)
