@@ -16,7 +16,7 @@ Editor/Driver instructions:
     Cursor keys and Home navigate
     Return opens character chooser window.  Navigate and select with ENTER, or if driver active, can test applied settings.
     Stop exits without saving (no WARNING)
-    F7 saves to a driver that can be saved or ````RUN```` to apply changes.
+    F7 saves to a driver that can be saved or RUN to apply changes.
     
 WARNING: Save will wipe out any other program loaded at $0801.  Please also ````RUN```` to move next BASIC program to $0A01 otherwise could crash if driver is running and load another program over it.
 
@@ -24,6 +24,8 @@ WARNING: Save will wipe out any other program loaded at $0801.  Please also ````
 
 (US)
 ![64keymaps.png](media/64keymaps.png)
+
+![64scancodes.png](media/64scancodes.png)
 
 (Danish)
 ![64danish.png](media/64danish.png)
