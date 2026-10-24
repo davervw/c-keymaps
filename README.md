@@ -1,4 +1,11 @@
-# Commodore Keyboard Mappings - Animated Display & Editor/Driver
+# Commodore Keyboard Mapping Utilities
+
+| Model  | Animated Display | Editor | Driver | KERNAL patcher |
+|--------|----------|--------|--------|---------|
+| Vic-20 |    ✅   |remap lite|  ✅   |         |
+| C64    |    ✅   |   ✅   |   ✅   |   ✅   |
+| C128   |    ✅   |        |   ✅   |         |
+| plus/4 |    ✅   |        |         |         |
 
 The keyboard maps for unshifted, SHIFT, Commodore, and Control are animated on screen drawing the PETSCII character in scan code order.  Commodore 128 adds Alt and Caps Lock maps, and different results will occur if DIN is pressed on international models.  International ROMs are available at [zimmers.net](https://zimmers.net/anonftp/pub/cbm/firmware/).
 
