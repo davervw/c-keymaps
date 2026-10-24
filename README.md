@@ -14,7 +14,9 @@ The BASIC versions are animated because they take a long time to draw, and purpo
 
 While the C64 has a full-blown editor included, remap keyboard drivers (without editors) are also available for C64, C128, and Vic-20.   Vic-20 includes a mini mapper.
 
-Also see [blog entry](https://techwithdave.davevw.com/2026/10/commodore-programmers-keyboard.html)
+Also see blog entries:\
+[1. references](https://techwithdave.davevw.com/2026/10/commodore-programmers-keyboard.html)\
+[2. Keyboard Editor/Driver for Commodore 64](https://techwithdave.davevw.com/2025/06/keyboard-editordriver-for-commodore-64.html)
 
 ## Commodore 64 
 
