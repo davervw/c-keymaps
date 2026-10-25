@@ -5,8 +5,8 @@
 | VIC-20 | ✅               | remap lite | ✅      |                | ✅       |
 | C64    | ✅               | ✅         | ✅     | ✅             | ✅ [src](https://github.com/davervw/scankeys) |
 | C128   | ✅               |            | ✅      |                |          |
-| C16    | ✅               |            |         |                |          |
-| Plus/4 | ✅               |            |         |                |          |
+| C16    | ✅               |            |         | ✅             |          |
+| Plus/4 | ✅               |            |         | ✅             |          |
 
 * keymaps = animated display of scancodes showing keyboard layouts, plus scancode reference chart
 * editor = select mapping of keys to individual PETSCII characters
