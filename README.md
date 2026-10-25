@@ -11,7 +11,7 @@
 * keymaps = animated display of scancodes showing keyboard layouts, plus scancode reference chart
 * editor = select mapping of keys to individual PETSCII characters
 * driver = key remap driver with tables (6 tables for C128, 4 tables for other) with sample remapping (punctuation)
-* KERNAL patcher = patch ROM keyboard tables directly: in RAM temporarily (C64 only), and patch file to make permanent
+* KERNAL patcher = patch ROM keyboard tables directly: in RAM temporarily (C64 only), and patch file to make permanent (all) ````xxd -r patch.txt kernal.bin````
 * scankeys = utility to show scancode(s) activity by row/column when keys pressed
 
 The keyboard maps for unshifted, SHIFT, Commodore, and Control are animated on screen drawing the PETSCII character in scan code order.  Commodore 128 adds Alt and Caps Lock maps, and different results will occur if DIN is pressed on international models.  International ROMs are available at [zimmers.net](https://zimmers.net/anonftp/pub/cbm/firmware/).
