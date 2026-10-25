@@ -8,7 +8,7 @@
 | C16    | ✅               |            |         |                |          |
 | Plus/4 | ✅               |            |         |                |          |
 
-* keymaps = animated display of scancodes, plus scancode reference chart
+* keymaps = animated display of scancodes showing keyboard layouts, plus scancode reference chart
 * editor = select mapping of keys to individual PETSCII characters
 * driver = key remap driver with tables (6 tables for C128, 4 tables for other) with sample remapping (punctuation)
 * KERNAL patcher = patch ROM keyboard tables directly: in RAM temporarily (C64 only), and patch file to make permanent
