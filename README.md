@@ -1,12 +1,18 @@
 # Commodore Keyboard Mapping Utilities
 
-| Model  | Animated display | Editor      | Driver  | KERNAL patcher |
-|--------|------------------|-------------|---------|----------------|
-| VIC-20 | ✅               | remap lite | ✅      |                |
-| C64    | ✅               | ✅         | ✅     | ✅             |
-| C128   | ✅               |            | ✅      |                |
-| C16    | ✅               |            |         |                |
-| Plus/4 | ✅               |            |         |                |
+| Model  | keymaps          | Editor      | Driver  | KERNAL patcher | scankeys |
+|--------|------------------|-------------|---------|----------------|----------|
+| VIC-20 | ✅               | remap lite | ✅      |                | ✅       |
+| C64    | ✅               | ✅         | ✅     | ✅             | ✅       |
+| C128   | ✅               |            | ✅      |                |          |
+| C16    | ✅               |            |         |                |          |
+| Plus/4 | ✅               |            |         |                |          |
+
+* keymaps = animated display of scancodes, plus scancode reference chart
+* editor = select mapping of keys to individual PETSCII characters
+* driver = key remap driver with tables (6 tables for C128, 4 tables for other) with sample remapping (punctuation)
+* KERNAL patcher = patch ROM keyboard tables directly: in RAM temporarily (C64 only), and patch file to make permanent
+* scankeys = utility to show scancode(s) activity by row/column when keys pressed
 
 The keyboard maps for unshifted, SHIFT, Commodore, and Control are animated on screen drawing the PETSCII character in scan code order.  Commodore 128 adds Alt and Caps Lock maps, and different results will occur if DIN is pressed on international models.  International ROMs are available at [zimmers.net](https://zimmers.net/anonftp/pub/cbm/firmware/).
 
