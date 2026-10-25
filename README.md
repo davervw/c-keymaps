@@ -3,7 +3,7 @@
 | Model  | keymaps          | Editor      | Driver  | KERNAL patcher | scankeys |
 |--------|------------------|-------------|---------|----------------|----------|
 | VIC-20 | ✅               | remap lite | ✅      |                | ✅       |
-| C64    | ✅               | ✅         | ✅     | ✅             | ✅       |
+| C64    | ✅               | ✅         | ✅     | ✅             | ✅ [src](https://github.com/davervw/scankeys) |
 | C128   | ✅               |            | ✅      |                |          |
 | C16    | ✅               |            |         |                |          |
 | Plus/4 | ✅               |            |         |                |          |
