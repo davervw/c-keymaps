@@ -2,7 +2,7 @@
 
 | Model  | keymaps          | Editor      | Driver  | KERNAL patcher | scankeys |
 |--------|------------------|-------------|---------|----------------|----------|
-| VIC-20 | ✅               | remap lite | ✅      |                | ✅       |
+| VIC-20 | ✅               | remap lite | ✅      | ✅             | ✅       |
 | C64    | ✅               | ✅         | ✅     | ✅             | ✅ [src](https://github.com/davervw/scankeys) |
 | C128   | ✅               |            | ✅      | ✅             |          |
 | C16    | ✅               |            |         | ✅             |          |
@@ -21,7 +21,7 @@ The BASIC versions are animated because they take a long time to draw, and purpo
 While the C64 has a full-blown editor included, remap keyboard drivers (without editors) are also available for C64, C128, and Vic-20.   Vic-20 includes a mini mapper.
 
 Also see blog entries:\
-[1. references](https://techwithdave.davevw.com/2026/10/commodore-programmers-keyboard.html)\
+[1. References: Keyboard Charts](https://techwithdave.davevw.com/2026/10/commodore-programmers-keyboard.html)\
 [2. Keyboard Editor/Driver for Commodore 64](https://techwithdave.davevw.com/2025/06/keyboard-editordriver-for-commodore-64.html)
 
 ## Commodore 64 
