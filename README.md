@@ -22,7 +22,8 @@ While the C64 has a full-blown editor included, remap keyboard drivers (without 
 
 Also see blog entries:\
 [1. References: Keyboard Charts](https://techwithdave.davevw.com/2026/10/commodore-programmers-keyboard.html)\
-[2. Keyboard Editor/Driver for Commodore 64](https://techwithdave.davevw.com/2025/06/keyboard-editordriver-for-commodore-64.html)
+[2. Keyboard Editor/Driver for Commodore 64](https://techwithdave.davevw.com/2025/06/keyboard-editordriver-for-commodore-64.html)\
+[3. Patch instructions](https://techwithdave.davevw.com/2026/10/patch-commodore-kernal-roms-to.html)
 
 ## Commodore 64 
 
