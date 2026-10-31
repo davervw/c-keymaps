@@ -18,7 +18,7 @@ The keyboard maps for unshifted, SHIFT, Commodore, and Control are animated on s
 
 The BASIC versions are animated because they take a long time to draw, and purposefully draw in scancode (0..63) order, around 30 seconds processing and drawing time.  The machine language port (64) takes less than a second to do the same thing, so while it is doing the same animation, it is so fast you can't see it.
 
-While the C64 has a full-blown editor included, remap keyboard drivers (without editors) are also available for C64, C128, and Vic-20.   Vic-20 includes a mini mapper.
+While the C64 has a full-blown editor included, remap keyboard drivers (without editors) are also available for C64, C128, and Vic-20.   Vic-20 and C128 include a mini mapper.
 
 Also see blog entries:\
 [1. References: Keyboard Charts](https://techwithdave.davevw.com/2026/10/commodore-programmers-keyboard.html)\
