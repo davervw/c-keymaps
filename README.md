@@ -4,7 +4,7 @@
 |--------|------------------|-------------|---------|----------------|----------|
 | VIC-20 | ✅               | remap lite | ✅      | ✅             | ✅       |
 | C64    | ✅               | ✅         | ✅     | ✅             | ✅ [src](https://github.com/davervw/scankeys) |
-| C128   | ✅               |            | ✅      | ✅             | ✅ [src](https://github.com/davervw/scankeys) |
+| C128   | ✅               | remap lite | ✅      | ✅             | ✅ [src](https://github.com/davervw/scankeys) |
 | C16    | ✅               |            |         | ✅             |          |
 | Plus/4 | ✅               |            |         | ✅             |          |
 
@@ -24,6 +24,17 @@ Also see blog entries:\
 [1. References: Keyboard Charts](https://techwithdave.davevw.com/2026/10/commodore-programmers-keyboard.html)\
 [2. Keyboard Editor/Driver for Commodore 64](https://techwithdave.davevw.com/2025/06/keyboard-editordriver-for-commodore-64.html)\
 [3. Patch instructions](https://techwithdave.davevw.com/2026/10/patch-commodore-kernal-roms-to.html)
+
+## Reference: memory locations
+
+| desc/model      |  Vic-20  |  C64     |  C128        |  C16       |  plus/4    |
+|-----------------|----------|----------|--------------|------------|------------|
+| scan code       |  197     |  197     |  212         |  2038      |  2038      |
+| key count       |  198     |  198     |  208         |  239       |  239       |
+| key buffer (10) |  631-640 |  631-640 |  842-851     |  1319-1328 |  1319-1328 |
+| shift state     |  653     |  653     |  211         |  1347      |  1347      |
+| matrix row      |  $9120   |  $DC00   |  $DC00/$D02F |  $FD30     |  $FD30     |
+| matrix col      |  $9121   |  $DC01   |  $DC01       |  $FF08     |  $FF08     |
 
 ## Commodore 64 
 
