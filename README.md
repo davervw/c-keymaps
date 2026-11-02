@@ -42,7 +42,7 @@ Also see blog entries:\
 (*) C16, plus/4 works a little different, must load A with scancode(from 198) first, and 198 and 2038 may differ based on whether the key repeats (info fuzzy at this time)
 
 * extra key on Vic-20, C64 is RESTORE tied to NMI (6510)
-* extra three keys on C128 outside of scan are CAPS LOCK serviced by 8510, 40/80 DISPLAY serviced by MMU, and RESTORE tied to NMI (8510).  Key matrix has 24 extra keys beyond C64 including special keys, separate up/down/left/right cursor keys, and numeric keypad.  CAPS LOCK is replaced by ASCII / DIN for international (non-English) models
+* extra three keys on C128 outside of scan are CAPS LOCK serviced by 8510, 40/80 DISPLAY serviced by MMU, and RESTORE tied to NMI (8510).  Key matrix has 24 extra keys beyond C64 including special keys, separate up/down/left/right cursor keys, and numeric keypad.  CAPS LOCK is replaced by ASCII / DIN for international (non-English) models which can change ROM character set displayed, and keyboard mapping.
 * plus/4 and C16 have two shift keys tied together due to custom changes in key matrix including separate up/down/left/right cursor keys, added Esc key
 
 ## Commodore 64 
