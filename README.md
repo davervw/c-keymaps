@@ -27,16 +27,16 @@ Also see blog entries:\
 
 ## Reference: memory locations
 
-| desc/model           |  Vic-20   |  C64      |  C128        |  C16            |  plus/4         |
-|----------------------|-----------|-----------|--------------|-----------------|-----------------|
-| scan code            |  197      |  197      |  212         |  2038/198       |  2038/198       |
-| key count            |  198      |  198      |  208         |  239            |  239            |
-| key buffer (10)      |  631-640  |  631-640  |  842-851     |  1319-1328      |  1319-1328      |
-| shift state          |  653      |  653      |  211         |  1347           |  1347           |
-| matrix row           |  $9120    |  $DC00    |  $DC00/$D02F |  $FD30          |  $FD30          |
-| matrix col           |  $9121    |  $DC01    |  $DC01       |  $FF08          |  $FF08          |
-| get key table vector |  $28F/290 |  $28F/290 |  $33C/$33D   |  $0545/$0546(*) |  $0545/$0546(*) |
-| key table pointer    |  $F5/$F6  |  $F5/$F6  |  $CC/$CD     |  $EC/$ED        |  $EC/$ED        |
+| desc/model           |  Vic-20   |  C64      |  C128        |  C16          |  plus/4       |
+|----------------------|-----------|-----------|--------------|---------------|---------------|
+| scan code            |  197      |  197      |  212         |  2038/198     |  2038/198     |
+| key count            |  198      |  198      |  208         |  239          |  239          |
+| key buffer (10)      |  631-640  |  631-640  |  842-851     |  1319-1328    |  1319-1328    |
+| shift state          |  653      |  653      |  211         |  1347         |  1347         |
+| matrix row           |  $9120    |  $DC00    |  $DC00/$D02F |  $FD30        |  $FD30        |
+| matrix col           |  $9121    |  $DC01    |  $DC01       |  $FF08        |  $FF08        |
+| get key table vector |  $28F/290 |  $28F/290 |  $33C/$33D   |  $545/$546(*) |  $545/$546(*) |
+| key table pointer    |  $F5/$F6  |  $F5/$F6  |  $CC/$CD     |  $EC/$ED      |  $EC/$ED      |
 
 (*) C16, plus/4 works a little different, must load A with scancode(from 198) first, and 198 and 2038 may differ based on whether the key repeats (info fuzzy at this time)
 
