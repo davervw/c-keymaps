@@ -29,6 +29,7 @@ Also see blog entries:\
 
 | desc/model           |  Vic-20   |  C64      |  C128        |  C16          |  plus/4       |
 |----------------------|-----------|-----------|--------------|---------------|---------------|
+| # of keys            |  64/65    |  64/65    |  88/91       |  64           |  64           |
 | scan code            |  197      |  197      |  212         |  2038/198     |  2038/198     |
 | key count            |  198      |  198      |  208         |  239          |  239          |
 | key buffer (10)      |  631-640  |  631-640  |  842-851     |  1319-1328    |  1319-1328    |
@@ -39,6 +40,10 @@ Also see blog entries:\
 | key table pointer    |  $F5/$F6  |  $F5/$F6  |  $CC/$CD     |  $EC/$ED      |  $EC/$ED      |
 
 (*) C16, plus/4 works a little different, must load A with scancode(from 198) first, and 198 and 2038 may differ based on whether the key repeats (info fuzzy at this time)
+
+* extra key on Vic-20, C64 is RESTORE tied to NMI (6510)
+* extra three keys on C128 outside of scan are CAPS LOCK serviced by 8510, 40/80 DISPLAY serviced by MMU, and RESTORE tied to NMI (8510).  Key matrix has 24 extra keys beyond C64 including special keys, separate up/down/left/right cursor keys, and numeric keypad.  CAPS LOCK is replaced by ASCII / DIN for international (non-English) models
+* plus/4 and C16 have two shift keys tied together due to custom changes in key matrix including separate up/down/left/right cursor keys, added Esc key
 
 ## Commodore 64 
 
