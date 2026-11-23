@@ -1,0 +1,43 @@
+0 rem rom revisions copyright (c) 2026
+1 rem by david r. van wagner
+2 rem davevw.com github.com/davervw/c-keymaps
+3 :
+4 data "033c: a9 00 a2 20 a0 a0 20 4b 03 a9 00 a2 20 a0 e0 85"
+5 data "034c: fb 84 fc a8 b1 fb 91 fb c8 d0 f9 e6 fc ca d0 f4"
+6 data "035c: 60"
+7 data "*"
+8 :
+10 data "bf4e: a9 40 85 cb a0 00 8c 8d 02 a9 f8 a2 ff 8d 2f d0"
+15 data "bf5e: 8c 00 dc a9 81 85 f5 a9 eb 85 f6 a9 fe ec 01 dc"
+16 data "bf6e: 60 ea ea"
+20 :
+25 data "e4b7: 1b 10 40 3b 0b 18 38 40 28 2b 40 01 13 20 08 40"
+30 data "e4c7: 23 2c 87 07 82 02 40 aa aa aa aa aa"
+35 :
+40 data "ea87: 20 4e bf f0 6f 86 f5 8e 2f d0 8d 00 dc 48 ad 01"
+45 data "ea97: dc cd 01 dc d0 f8 a2 08 4a b0 17 48 b9 81 eb c9"
+50 data "eaa7: 05 b0 0c c9 03 f0 08 0d 8d 02 8d 8d 02 10 02 84"
+55 data "eab7: cb 68 c8 ca d0 e2 68 38 2a 26 f5 a6 f5 e0 f7 d0"
+60 data "eac7: c6 a4 cb c0 41 90 0c b9 76 e4 10 05 ee 8d 02 29"
+65 data "ead7: 3f 85 cb 20 61 bf 6c 8f 02"
+70 data ""
+71 :
+72 poke1,peek(1)or7
+73 printchr$(147)"patching c64 rom for c128 keyboard"chr$(17)
+75 read a$:if a$="" then 110
+76 if a$="*" then sys 828:goto 75
+80 h$=left$(a$,4):gosub 1000:ad=v
+85 a$=mid$(a$,7)
+90 print ad;:i=0
+95 h$=left$(a$,2):gosub1000:printv;:pokead+i,v:i=i+1
+100 iflen(a$)>=4thena$=mid$(a$,4):goto95
+105 print:goto75
+110 poke 1,(peek(1)and248)or5:printchr$(17)"patched & active":end
+1000 v=0:printchr$(18)h$chr$(146);
+1010 d=asc(left$(h$,1))-asc("0")
+1020 ifd>10thend=d+asc("0")-asc("a")+10
+1030 ifd<0ord>15thenstop
+1040 v=v*16+d
+1050 h$=right$(h$,len(h$)-1)
+1060 iflen(h$)>0then1010
+1070 return

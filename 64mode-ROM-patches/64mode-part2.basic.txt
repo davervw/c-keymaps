@@ -1,0 +1,19 @@
+72 poke1,peek(1)or7
+73 printchr$(147)"patching c64 rom for c128 keyboard"chr$(17)
+75 read a$:if a$="" then 110
+76 if a$="*" then sys 828:goto 75
+80 h$=left$(a$,4):gosub 1000:ad=v
+85 a$=mid$(a$,7)
+90 print ad;:i=0
+95 h$=left$(a$,2):gosub1000:printv;:pokead+i,v:i=i+1
+100 iflen(a$)>=4thena$=mid$(a$,4):goto95
+105 print:goto75
+110 poke 1,(peek(1)and248)or5:printchr$(17)"patched & active":end
+1000 v=0:printchr$(18)h$chr$(146);
+1010 d=asc(left$(h$,1))-asc("0")
+1020 ifd>10thend=d+asc("0")-asc("a")+10
+1030 ifd<0ord>15thenstop
+1040 v=v*16+d
+1050 h$=right$(h$,len(h$)-1)
+1060 iflen(h$)>0then1010
+1070 return

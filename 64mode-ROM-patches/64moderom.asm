@@ -11,6 +11,7 @@
 ; alternatively see patches which can be applied to BASIC/KERNAL ROMs with xxd (see README.md)
 
 * = $033C   ; tape buffer, temporary for copying ROMs to RAM
+LDA #$00
 LDX #$20
 LDY #$A0
 JSR $034B
