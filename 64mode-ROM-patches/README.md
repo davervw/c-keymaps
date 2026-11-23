@@ -1,0 +1,1 @@
+These files are the assembly and patches for enabling 128 cursor keys and keypad in 64 mode.  Also see ../files/64mode patch for a CBM program real-time applying these ROM patches and running from RAM.
