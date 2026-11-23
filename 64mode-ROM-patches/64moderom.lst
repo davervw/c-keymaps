@@ -1,0 +1,116 @@
+
+; ******** Source: 64moderom.asm
+     1                          ; 64moderom.asm - updated keyboard driver for 64 mode of 128 to support cursor and keypad keys
+     2                          ; updates are derived from Commodore ROM keyboard driver, enhanced to support up to 87 keys
+     3                          ;
+     4                          ; revisions Copyright (c) 2026 by David R. Van Wagner
+     5                          ; MIT LICENSE
+     6                          ;
+     7                          ; github.com/davervw/c-keymaps
+     8                          ; davevw.com
+     9                          ;
+    10                          ; compiled bytes have been manually encoded into "64mode patch" program which patches a C64 by modifying ROMs into RAM
+    11                          ; alternatively see patches which can be applied to BASIC/KERNAL ROMs with xxd (see README.md)
+    12                          
+    13                          * = $033C   ; tape buffer, temporary for copying ROMs to RAM
+    14  033c a220               LDX #$20
+    15  033e a0a0               LDY #$A0
+    16  0340 204b03             JSR $034B
+    17  0343 a900               LDA #$00
+    18  0345 a220               LDX #$20
+    19  0347 a0e0               LDY #$E0
+    20  0349 85fb               STA $FB
+    21  034b 84fc               STY $FC
+    22  034d a8                 TAY
+    23  034e b1fb               LDA ($FB),Y
+    24  0350 91fb               STA ($FB),Y
+    25  0352 c8                 INY
+    26  0353 d0fb               BNE $0350
+    27  0355 e6fc               INC $FC
+    28  0357 ca                 DEX
+    29  0358 d0f6               BNE $0350
+    30  035a 60                 RTS
+    31                          
+    32                          * = $BF4E   ; to BF70
+    33                          init_scan:
+    34  bf4e a940               LDA #$40    ; no key
+    35  bf50 85cb               STA $CB     ; scan code
+    36  bf52 a000               LDY #$00    ; zero, for shift state, scancode counter, and all standard keyboard rows
+    37  bf54 8c8d02             STY $028D   ; shift state 3 bits Control(2)=4 CBM(1)=2 Shift(0)=1
+    38  bf57 a9f8               LDA #$F8    ; lower 3 bits cleared
+    39  bf59 a2ff               LDX #$FF    ; lower 3 bits are extended C128 keyboard row for later
+    40  bf5b 8d2fd0             STA $D02F   ; all extended keyboard rows selected
+    41  bf5e 8c00dc             STY $DC00   ; all standard keyboard rows selected
+    42                          reset_table:
+    43  bf61 a981               LDA #$81    ; low unshifted table in ROM
+    44  bf63 85f5               STA $F5     ; key table ptr
+    45  bf65 a9eb               LDA #$EB    ; high unshifted table in ROM
+    46  bf67 85f6               STA $F6     ; key table ptr + 1
+    47  bf69 a9fe               LDA #$FE    ; start with bit 1 clear for later
+    48  bf6b ec01dc             CPX $DC01   ; compare columns with #$FF - set Z if no keys pressed
+    49  bf6e 60                 RTS
+    50  bf6f ea                 NOP
+    51  bf70 ea                 NOP
+    52                          
+    53                          * = $E4B7   ; to E4D2
+    54                          xlat_extended:
+    55  e4b7 1b10403b0b183840   !byte  27, 16, 64, 59, 11, 24, 56, 64
+    56  e4bf 282b400113200840   !byte  40, 43, 64,  1, 19, 32,  8, 64
+    57  e4c7 232c87079d1d40aa   !byte  35, 44,135,  7,157, 29, 64, 170
+    58  e4cf aaaaaaaa           !byte 170,170,170,170
+    59                          
+    60                          * = $EA87   ; to EADF
+    61  ea87 204ebf             JSR init_scan ; some code patched in BASIC ROM
+    62  ea8a f06f               BEQ $EAFB   ; branch if no key press
+    63  ea8c 86f5               STX $F5     ; save keyboard row extended 3-bits
+    64                          --
+    65  ea8e 8e2fd0             STX $D02F   ; set extended 3-bits keyboard row
+    66  ea91 8d00dc             STA $DC00   ; set lower 8-bits keyboard row
+    67  ea94 48                 PHA         ; save keyboard row lower 8-bits
+    68                          - 
+    69  ea95 ad01dc             LDA $DC01   ; load columns
+    70  ea98 cd01dc             CMP $DC01   ; stable?
+    71  ea9b d0f8               BNE -       ; repeat if key bounce
+    72  ea9d a208               LDX #$08    ; number of columns to read
+    73                          -
+    74  ea9f 4a                 LSR         ; shift low bit into C
+    75  eaa0 b017               BCS +++     ; branch if not this key 
+    76  eaa2 48                 PHA         ; save keyboard columns read (shifted)
+    77  eaa3 b981eb             LDA $EB81,Y ; get unshifted key mapping
+    78  eaa6 c905               CMP #$05    ; not shift code?
+    79  eaa8 b00c               BCS +       ; branch if not shift code
+    80  eaaa c903               CMP #$03    ; STOP key?
+    81  eaac f008               BEQ +       ; branch if STOP (not shift code)
+    82  eaae 0d8d02             ORA $028D   ; combine with shift code
+    83  eab1 8d8d02             STA $028D   ; store shift code
+    84  eab4 1002               BPL ++      ; unconditional branch, don't store scancode
+    85                          +
+    86  eab6 84cb               STY $CB     ; found keypress that wasn't shift key, store it
+    87                          ++
+    88  eab8 68                 PLA         ; restore keyboard columns read
+    89                          +++
+    90  eab9 c8                 INY         ; increment working scancode count
+    91  eaba ca                 DEX         ; finished one column
+    92  eabb d0e2               BNE -       ; loop until read all columns
+    93  eabd 68                 PLA         ; restore keyboard row
+    94  eabe 38                 SEC         ; shifted in bit needs to be set
+    95  eabf 2a                 ROL         ; next row, shift bits left
+    96  eac0 26f5               ROL $F5     ; shift extended bits left
+    97  eac2 a6f5               LDX $F5     ; read result
+    98  eac4 e0f7               CPX #$F7    ; check if out of range of 11-bits
+    99  eac6 d0c6               BNE --      ; branch if limit not reached - scan more keyboard rows
+   100  eac8 a4cb               LDY $CB     ; retrieve any scancode
+   101  eaca c041               CPY #$41
+   102  eacc 900c               BCC ++      ; branch if less than 65
+   103  eace b976e4             LDA xlat_extended-$41, Y ; translate extended keys (and no key, note HELP not mapped with this implementation)
+   104  ead1 1005               BPL +
+   105  ead3 ee8d02             INC $028D   ; assume it was zero
+   106  ead6 293f               AND #$3F
+   107                          +
+   108  ead8 85cb               STA $CB     ; store translated scancode
+   109                          ++
+   110  eada 2061bf             JSR reset_table
+   111  eadd 6c8f02             JMP ($028F) ; key is pressed, process it including getting proper shift table pointer
+   112                          ; * = $EAE0
+   113                          
+   114                          ; EAFB no key press

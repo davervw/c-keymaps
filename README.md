@@ -4,7 +4,7 @@
 |--------|------------------|-------------|---------|----------------|----------|
 | VIC-20 | ✅               | remap lite | ✅      | ✅             | ✅       |
 | C64    | ✅               | ✅         | ✅     | ✅             | ✅ [src](https://github.com/davervw/scankeys) |
-| C128   | ✅               | remap lite | ✅      | ✅             | ✅ [src](https://github.com/davervw/scankeys) |
+| C128   | ✅               | remap lite | ✅      | ✅ & 64 mode   | ✅ [src](https://github.com/davervw/scankeys) |
 | C16    | ✅               | remap lite | ✅      | ✅             | ✅ [src](https://github.com/davervw/scankeys) |
 | Plus/4 | ✅               | remap lite | ✅      | ✅             | ✅ [src](https://github.com/davervw/scankeys) |
 
@@ -12,6 +12,7 @@
 * editor = select mapping of keys to individual PETSCII characters
 * driver = key remap driver with tables (6 tables for C128, 4 tables for other) with sample remapping (punctuation)
 * KERNAL patcher = patch ROM keyboard tables directly: in RAM temporarily (C64 only), and patch file to make permanent (all) ````xxd -r patch.txt kernal.bin````
+  and a BASIC/KERNAL patcher to update keyboard driver to also use 128 cursor and keypad keys while in 64 mode (can be combined with C64 patches to include keyboard remappings)
 * scankeys = utility to show scancode(s) activity by row/column when keys pressed
 
 The keyboard maps for unshifted, SHIFT, Commodore, and Control are animated on screen drawing the PETSCII character in scan code order.  Commodore 128 adds Alt and Caps Lock maps, and different results will occur if DIN is pressed on international models.  International ROMs are available at [zimmers.net](https://zimmers.net/anonftp/pub/cbm/firmware/).

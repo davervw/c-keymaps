@@ -1,0 +1,3 @@
+1f4e: a9 40 85 cb a0 00 8c 8d 02 a9 f8 a2 ff 8d 2f d0
+1f5e: 8c 00 dc a9 81 85 f5 a9 eb 85 f6 a9 fe ec 01 dc
+1f6e: 60 ea ea
